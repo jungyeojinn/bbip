@@ -1,5 +1,29 @@
 ## 회고
 
+
+### 💜 240903 (화)
+
+#### 💡 작업 상황
+##### 시퀀스 다이어그램
+- 소셜 로그인, 라이브 스트리밍, 얼굴 등록, 촬영 네 파트에 대한 시퀀스 다이어그램 작성 완료
+
+###### AI 모델 조사
+- Face detection model
+    - OpenCV Haar Cascades Clasifier
+    - DLib Histogram of Oriented Gradients (HOG)
+    - DLib Convolutional Neural Network (CNN)
+    - Multi-task Cascaded CNN (MTCNN) - Tensorflow
+    - Mobilenet-SSD Face Detector - Tensorflow
+
+
+#### 💡 이슈
+- 시퀀스 다이어그램 완료했다. 처음엔 어려웠지만, 그래도 감 잡고 차근차근 해보니 할 만 했고 생각보다 빠르게 끝낼 수 있었다.
+- AI 모델 찾아보고 있는데, 아직 잘 모르겠지만! 내일 전문가 멘토 시간을 잘 활용해서 감을 찾을 수 있으면 좋겠다.<BR>
+그래도 얼굴 검출에서는 어떤 모델을 쓰면 좋을 지 찾은 듯 해서 내일 더 자세히 알아보면서 부딪쳐봐야겠다.
+
+---
+
+
 ### 💜 240902 (월)
 
 #### 💡 작업 상황
