@@ -7,11 +7,10 @@ class FaceRegistrationPage extends StatefulWidget {
   const FaceRegistrationPage({super.key});
 
   @override
-  _FaceRegistrationPageState createState() => _FaceRegistrationPageState();
+  FaceRegistrationPageState createState() => FaceRegistrationPageState();
 }
 
-class _FaceRegistrationPageState extends State<FaceRegistrationPage> {
-
+class FaceRegistrationPageState extends State<FaceRegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,7 +30,7 @@ class _FaceRegistrationPageState extends State<FaceRegistrationPage> {
                     0.6, // 높이를 가로 크기와 동일하게 설정하여 원형으로 만듦
                 child: AspectRatio(
                   aspectRatio: 1, // 1:1 비율 설정
-                  child: CameraWidget(), // 카메라 화면 표시
+                  child: CameraWidget(cameraIndex: 0), // 카메라 화면 표시
                 ),
               ),
             ),
