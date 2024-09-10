@@ -5,12 +5,15 @@ import 'package:get/get.dart';
 import 'package:fe/view/pages/main_page.dart';
 import 'package:fe/view/pages/landing_page.dart';
 import 'package:fe/view/pages/face_registration_page.dart';
+import 'package:fe/view/pages/my_page.dart';
 
 void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -22,8 +25,11 @@ class MyApp extends StatelessWidget {
       initialRoute: '/landing', // 초기 페이지 설정
       getPages: [
         GetPage(name: '/landing', page: () => const LandingPage()),
-        GetPage(name: '/face_registration', page: () => const FaceRegistrationPage()),
+        GetPage(
+            name: '/face_registration',
+            page: () => const FaceRegistrationPage()),
         GetPage(name: '/main', page: () => const MainPage()),
+        GetPage(name: '/my', page: () => const MyPage()),
       ],
     );
   }

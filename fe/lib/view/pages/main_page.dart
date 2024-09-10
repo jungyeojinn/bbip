@@ -1,5 +1,7 @@
 // main_page.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
 import 'package:fe/view/pages/second_page.dart';
 import 'package:fe/view/components/main_page/camera_menu_widget.dart';
 import 'package:fe/view/components/common/camera_widget.dart';
@@ -14,6 +16,7 @@ class MainPage extends StatefulWidget {
 class MainPageState extends State<MainPage> {
   String selectedMode = 'Live'; // 기본 모드를 Live로 설정
   bool isVideoRecording = false; // Video 모드 상태를 관리
+  int cameraIndex = 0; // 추가: 현재 선택된 카메라 인덱스 (0: 후면, 1: 전면)
 
   void updateMode(String mode) {
     setState(() {
@@ -24,19 +27,25 @@ class MainPageState extends State<MainPage> {
     });
   }
 
+  void toggleCamera() {
+    setState(() {
+      cameraIndex = (cameraIndex == 0) ? 1 : 0; // 카메라 인덱스를 토글
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(
-            child: CameraWidget(), // 카메라 위젯 추가
+          Positioned.fill(
+            child: CameraWidget(cameraIndex: cameraIndex), // 변경: 카메라 인덱스를 전달
           ),
           Positioned(
             top: 16.0,
             left: 16.0,
             child: IconButton(
-              onPressed: () {},
+              onPressed: toggleCamera, // 카메라 전환 기능 추가
               icon: const Icon(
                 Icons.cached,
                 color: Colors.white,
@@ -48,7 +57,9 @@ class MainPageState extends State<MainPage> {
             top: 16.0,
             right: 16.0,
             child: IconButton(
-              onPressed: () {},
+              onPressed: () {
+                Get.toNamed('/my');
+              },
               icon: const Icon(
                 Icons.person,
                 color: Colors.white,
@@ -90,7 +101,8 @@ class MainPageState extends State<MainPage> {
             );
           },
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
             textStyle: const TextStyle(fontSize: 20.0),
           ),
           child: const Text('Go Live'),
@@ -100,9 +112,10 @@ class MainPageState extends State<MainPage> {
           icon: Icon(
             isVideoRecording
                 ? Icons.stop_circle_outlined // 녹화 중이면 stop circle 아이콘
-                : Icons.radio_button_checked, // 녹화 중이 아니면 Radio Button checked 아이콘
+                : Icons
+                    .radio_button_checked, // 녹화 중이 아니면 Radio Button checked 아이콘
             color: Colors.white,
-            size: 40.0,
+            size: 60.0,
           ),
           onPressed: () {
             setState(() {
@@ -115,7 +128,7 @@ class MainPageState extends State<MainPage> {
           icon: const Icon(
             Icons.radio_button_unchecked,
             color: Colors.white,
-            size: 40.0,
+            size: 60.0,
           ),
           onPressed: () {},
         );
