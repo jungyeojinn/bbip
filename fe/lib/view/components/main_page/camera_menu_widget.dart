@@ -8,10 +8,10 @@ class CameraMenuWidget extends StatefulWidget {
   const CameraMenuWidget({super.key, required this.onModeChanged});
 
   @override
-  _CameraMenuWidgetState createState() => _CameraMenuWidgetState();
+  CameraMenuWidgetState createState() => CameraMenuWidgetState();
 }
 
-class _CameraMenuWidgetState extends State<CameraMenuWidget> {
+class CameraMenuWidgetState extends State<CameraMenuWidget> {
   final List<String> _modes = ['Live', 'Video', 'Photo'];
   final CarouselSliderController _controller = CarouselSliderController();
   int _currentIndex = 0;
