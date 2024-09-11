@@ -7,8 +7,13 @@ import 'package:fe/view/pages/landing_page.dart';
 import 'package:fe/view/pages/face_registration_page.dart';
 import 'package:fe/view/pages/my_page.dart';
 import 'package:fe/view/pages/live_page.dart';
+// getX 상태관리
+import 'package:fe/controller/mode_controller.dart';
 
 void main() {
+  // ModeController를 GetX의 의존성 주입 시스템에 등록
+  Get.put(ModeController());
+
   runApp(MyApp());
 }
 

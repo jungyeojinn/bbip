@@ -1,9 +1,13 @@
 // camera_menu_widget.dart
+import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+
 import 'package:carousel_slider/carousel_slider.dart';
 
+import 'package:fe/controller/mode_controller.dart';
+
 class CameraMenuWidget extends StatefulWidget {
-  final Function(String) onModeChanged; // 모드 변경 시 호출할 콜백 추가
+  final Function(String) onModeChanged;
 
   const CameraMenuWidget({super.key, required this.onModeChanged});
 
@@ -18,50 +22,56 @@ class CameraMenuWidgetState extends State<CameraMenuWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: sliderWidget(),
-    );
-  }
+    final ModeController modeController = Get.find();
 
-  Widget sliderWidget() {
-    return CarouselSlider(
-      carouselController: _controller,
-      items: _modes.asMap().entries.map(
-        (entry) {
-          int index = entry.key;
-          String mode = entry.value;
-          return GestureDetector(
-            onTap: () {
-              _controller.animateToPage(index);
-            },
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 5.0),
-              child: Center(
-                child: Text(
-                  mode,
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: _currentIndex == index ? Colors.white : Colors.grey,
-                    fontWeight: _currentIndex == index
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+    return Center(
+      child: Obx(() {
+        _currentIndex = modeController.currentIndex.value;
+
+        return CarouselSlider(
+          carouselController: _controller,
+          items: _modes.asMap().entries.map(
+            (entry) {
+              int index = entry.key;
+              String mode = entry.value;
+              return GestureDetector(
+                onTap: () {
+                  modeController.setCurrentMode(mode, index);
+                  _controller.animateToPage(index); // 페이지로 애니메이션
+                  widget.onModeChanged(mode);
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                  child: Center(
+                    child: Text(
+                      mode,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: modeController.currentMode.value == mode
+                            ? Colors.white
+                            : Colors.grey,
+                        fontWeight: modeController.currentMode.value == mode
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          );
-        },
-      ).toList(),
-      options: CarouselOptions(
-        viewportFraction: 0.18,
-        enableInfiniteScroll: false,
-        onPageChanged: (index, reason) {
-          setState(() {
-            _currentIndex = index;
-            widget.onModeChanged(_modes[index]); // 모드 변경 시 콜백 호출
-          });
-        },
-      ),
+              );
+            },
+          ).toList(),
+          options: CarouselOptions(
+            viewportFraction: 0.18,
+            enableInfiniteScroll: false,
+            initialPage: _currentIndex, // 시작할 때 현재 인덱스 설정
+            onPageChanged: (index, reason) {
+              String newMode = _modes[index];
+              modeController.setCurrentMode(newMode, index);
+              widget.onModeChanged(newMode);
+            },
+          ),
+        );
+      }),
     );
   }
 }

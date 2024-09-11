@@ -1,25 +1,23 @@
-// bottom_ui_widget.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'animated_button.dart'; // 새로 만든 애니메이션 위젯 import
+import 'animated_button.dart'; // 애니메이션 위젯 import
 import 'package:fe/view/components/main_page/gallery_icon_widget.dart';
 
-class BottomUiWidget extends StatefulWidget {
+class BottomUiWidget extends StatelessWidget {
   final String selectedMode;
-  bool isVideoRecording;
+  final bool isVideoRecording; // MainPage에서 전달받은 값
+  final VoidCallback onRecordPressed; // 녹화 상태 변경 함수
+  final VoidCallback onGoLivePressed; // Go Live 버튼을 위한 콜백 함수 추가
 
-  BottomUiWidget({
+  const BottomUiWidget({
     super.key,
     required this.selectedMode,
     required this.isVideoRecording,
+    required this.onRecordPressed,
+    required this.onGoLivePressed, // Go Live 콜백 받음
   });
 
-  @override
-  BottomUiWidgetState createState() => BottomUiWidgetState();
-}
-
-class BottomUiWidgetState extends State<BottomUiWidget> {
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -27,19 +25,17 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
         Center(
           child: _buildModeSpecificUI(),
         ),
-        if (widget.selectedMode == 'Video' || widget.selectedMode == 'Photo')
+        if (selectedMode == 'Video' || selectedMode == 'Photo')
           GalleryIconWidget()
       ],
     );
   }
 
   Widget _buildModeSpecificUI() {
-    switch (widget.selectedMode) {
+    switch (selectedMode) {
       case 'Live':
         return ElevatedButton(
-          onPressed: () {
-            _goLive(context);
-          },
+          onPressed: onGoLivePressed, // MainPage에서 전달받은 Go Live 콜백 호출
           style: ElevatedButton.styleFrom(
             padding:
                 const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
@@ -48,14 +44,9 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
           child: const Text('Go Live'),
         );
       case 'Video':
-        // 애니메이션 효과가 있는 녹화 버튼 사용
         return AnimatedRecordButton(
-          isVideoRecording: widget.isVideoRecording,
-          onPressed: () {
-            setState(() {
-              widget.isVideoRecording = !widget.isVideoRecording; // 녹화 상태 토글
-            });
-          },
+          isVideoRecording: isVideoRecording, // MainPage에서 전달받은 상태
+          onPressed: onRecordPressed, // 녹화 상태 변경 함수 호출
         );
       case 'Photo':
         return IconButton(
@@ -69,9 +60,5 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  Future<void> _goLive(BuildContext context) async {
-    Get.toNamed('/live');
   }
 }
