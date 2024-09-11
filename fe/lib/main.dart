@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/blur', // 초기 페이지 설정
+      initialRoute: '/landing', // 초기 페이지 설정
       getPages: [
         GetPage(name: '/landing', page: () => const LandingPage()),
         GetPage(
