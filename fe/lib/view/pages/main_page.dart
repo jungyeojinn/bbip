@@ -39,11 +39,6 @@ class MainPageState extends State<MainPage> {
     });
   }
 
-  // _goLive 메서드 MainPage에 정의
-  Future<void> _goLive(BuildContext context) async {
-    Get.toNamed('/live');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +94,6 @@ class MainPageState extends State<MainPage> {
                 selectedMode: selectedMode,
                 isVideoRecording: isVideoRecording, // 상태 전달
                 onRecordPressed: toggleVideoRecording, // 녹화 상태 변경
-                onGoLivePressed: () => _goLive(context), // Go Live 콜백 전달
               ),
             ),
           ),

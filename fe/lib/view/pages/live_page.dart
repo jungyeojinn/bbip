@@ -8,14 +8,14 @@ class LivePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Second Page'),
+        title: Text('Live Page'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'This is the second page',
+              'This is the live page',
               style: TextStyle(fontSize: 24),
             ),
             SizedBox(height: 20),
