@@ -26,7 +26,7 @@ class _BlurPageState extends State<BlurPage> {
             // 왼쪽 상단에 뒤로 가기 아이콘 추가
             Positioned(
               top: 40,
-              left: 10,
+              left: 20,
               child: IconButton(
                 icon: const Icon(Icons.arrow_back,
                     color: Colors.white), // 뒤로 가기 아이콘
@@ -46,16 +46,27 @@ class _BlurPageState extends State<BlurPage> {
                   children: [
                     ElevatedButton(
                       onPressed: () {
-                        // 저장 버튼 클릭 시 동작
-                        print('Save button clicked');
+                        // 저장 버튼 클릭 시 SnackBar 보여주기
+                        Get.snackbar(
+                          '저장 완료', // 제목
+                          '사진이 저장되었습니다.', // 메시지
+                          snackPosition: SnackPosition.BOTTOM, // 스낵바 위치
+                          duration: const Duration(seconds: 3), // 3초 동안 표시
+                          colorText: Colors.white,
+                        );
                       },
                       child: const Text('Save'),
                     ),
                     const SizedBox(width: 20), // 두 버튼 간 간격
                     ElevatedButton(
                       onPressed: () {
-                        // Blur 버튼 클릭 시 동작
-                        print('Blur button clicked');
+                        Get.snackbar(
+                          '블러 처리 완료', // 제목
+                          '사진이 저장되었습니다.', // 메시지
+                          snackPosition: SnackPosition.BOTTOM, // 스낵바 위치
+                          duration: const Duration(seconds: 3), // 3초 동안 표시
+                          colorText: Colors.white,
+                        );
                       },
                       child: const Text('Blur'),
                     ),
