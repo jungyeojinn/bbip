@@ -64,20 +64,21 @@ class MainPageState extends State<MainPage> {
               ),
             ),
           ),
-          Positioned(
-            top: 16.0,
-            right: 16.0,
-            child: IconButton(
-              onPressed: () {
-                Get.toNamed('/my');
-              },
-              icon: const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 40.0,
+          if (!isVideoRecording)
+            Positioned(
+              top: 16.0,
+              right: 16.0,
+              child: IconButton(
+                onPressed: () {
+                  Get.toNamed('/my');
+                },
+                icon: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 40.0,
+                ),
               ),
             ),
-          ),
 
           // 녹화 중이 아닐 때만 CameraMenuWidget 보이게 설정
           if (!isVideoRecording)
@@ -89,7 +90,6 @@ class MainPageState extends State<MainPage> {
                 child: CameraMenuWidget(onModeChanged: updateMode),
               ),
             ),
-
           Positioned(
             bottom: 50.0,
             left: 0,

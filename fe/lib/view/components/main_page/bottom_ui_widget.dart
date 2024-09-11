@@ -25,7 +25,8 @@ class BottomUiWidget extends StatelessWidget {
         Center(
           child: _buildModeSpecificUI(),
         ),
-        if (selectedMode == 'Video' || selectedMode == 'Photo')
+        if (!isVideoRecording && selectedMode == 'Video' ||
+            selectedMode == 'Photo')
           GalleryIconWidget()
       ],
     );
