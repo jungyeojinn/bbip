@@ -27,7 +27,7 @@ class CameraMenuWidgetState extends State<CameraMenuWidget> {
     return CarouselSlider(
       carouselController: _controller,
       items: _modes.asMap().entries.map(
-            (entry) {
+        (entry) {
           int index = entry.key;
           String mode = entry.value;
           return GestureDetector(
@@ -41,8 +41,10 @@ class CameraMenuWidgetState extends State<CameraMenuWidget> {
                   mode,
                   style: TextStyle(
                     fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: _currentIndex == index ? FontWeight.bold : FontWeight.normal,
+                    color: _currentIndex == index ? Colors.white : Colors.grey,
+                    fontWeight: _currentIndex == index
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                   ),
                 ),
               ),

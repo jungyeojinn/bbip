@@ -81,9 +81,8 @@ class MainPageState extends State<MainPage> {
             right: 0,
             child: Center(
               child: BottomUiWidget(
-                selectedMode: selectedMode,
-                isVideoRecording: isVideoRecording
-              ),
+                  selectedMode: selectedMode,
+                  isVideoRecording: isVideoRecording),
             ),
           ),
         ],
