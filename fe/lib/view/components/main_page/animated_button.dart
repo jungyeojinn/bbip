@@ -20,19 +20,22 @@ class _AnimatedRecordButtonState extends State<AnimatedRecordButton> {
     return GestureDetector(
       onTap: widget.onPressed, // 버튼을 눌렀을 때 수행할 작업
       child: Center(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 400), // 애니메이션 지속 시간
-          width: 60.0,
-          height: 60.0,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: DecorationImage(
-              image: AssetImage(
-                widget.isVideoRecording
-                    ? 'assets/recorded-button.png' // 녹화 중일 때 이미지
-                    : 'assets/record-button.png', // 녹화 중이 아닐 때 이미지
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500), // 애니메이션 지속 시간
+          child: Container(
+            key: ValueKey<bool>(widget.isVideoRecording),
+            width: 60.0,
+            height: 60.0,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: AssetImage(
+                  widget.isVideoRecording
+                      ? 'assets/recorded-button.png' // 녹화 중일 때 이미지
+                      : 'assets/record-button.png', // 녹화 중이 아닐 때 이미지
+                ),
+                fit: BoxFit.cover,
               ),
-              fit: BoxFit.cover,
             ),
           ),
         ),
