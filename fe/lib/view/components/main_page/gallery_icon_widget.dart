@@ -1,8 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-class GalleryIconWidget extends StatelessWidget {
+class GalleryIconWidget extends StatefulWidget {
   const GalleryIconWidget({super.key});
+
+  @override
+  GalleryIconWidgetState createState() => GalleryIconWidgetState();
+}
+
+class GalleryIconWidgetState extends State<GalleryIconWidget> {
+  XFile? _image; //이미지를 담을 변수 선언
+  final ImagePicker picker = ImagePicker(); //ImagePicker 초기화
+
+  Future getImage(ImageSource imageSource) async {
+    final XFile? pickedFile = await picker.pickImage(source: imageSource);
+    if (pickedFile != null) {
+      setState(() {
+        _image = XFile(pickedFile.path); //가져온 이미지를 _image에 저장
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +35,7 @@ class GalleryIconWidget extends StatelessWidget {
           size: 40.0,
         ),
         onPressed: () {
-          Get.toNamed('/my');
+          getImage(ImageSource.gallery);
         },
       ),
     );

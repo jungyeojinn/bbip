@@ -31,6 +31,8 @@ dependencies:
   get:
   camera:
   carousel_slider:
+  image_picker:
+  permission_handler:
   flutter:
     sdk: flutter
 
