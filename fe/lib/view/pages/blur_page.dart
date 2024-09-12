@@ -16,9 +16,9 @@ class _BlurPageState extends State<BlurPage> {
         decoration: const BoxDecoration(
           color: Colors.black,
           image: DecorationImage(
-            fit: BoxFit.fitWidth, // 이미지를 화면에 꽉 채우고 중앙에 맞춤
+            fit: BoxFit.scaleDown, // 이미지를 화면에 꽉 채우고 중앙에 맞춤
             alignment: Alignment.center, // 이미지를 중앙에 맞추기
-            image: AssetImage('assets/mountain-wallpaper.jpg'),
+            image: AssetImage('assets/korea-wallpaper.jpg'),
           ),
         ),
         child: Stack(
