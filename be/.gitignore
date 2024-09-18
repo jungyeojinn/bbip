@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### application.properties ###
+.properties
+
+### 테스트 화면
+.html

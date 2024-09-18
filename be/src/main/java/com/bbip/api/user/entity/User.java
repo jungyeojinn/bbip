@@ -1,4 +1,4 @@
-package com.bbip.user.entity;
+package com.bbip.api.user.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
