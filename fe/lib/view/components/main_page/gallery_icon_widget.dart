@@ -46,7 +46,7 @@ class GalleryIconWidgetState extends State<GalleryIconWidget> {
             borderRadius: BorderRadius.circular(18.0), // 동일한 반지름으로 이미지도 자르기
             child: Image.asset(
               // 나중에 gallery에 있는 첫 번째 사진으로 바꿀 것임.
-              'assets/IU.png',
+              'assets/iu.png',
               width: 48.0,
               height: 48.0,
               fit: BoxFit.cover,

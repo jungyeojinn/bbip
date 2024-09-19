@@ -81,7 +81,7 @@ class MainPageState extends State<MainPage> {
                     child: Image.asset(
                       // 나중에 본인이 등록한 이미지를 보여줄 것이고
                       // default 값은 아이콘으로 해둘 것임. 지금은 IU로 돼있음.
-                      'assets/IU.png',
+                      'assets/iu.png',
                       width: 36.0,
                       height: 36.0,
                       fit: BoxFit.cover, // 이미지를 원 안에 꽉 채우기
