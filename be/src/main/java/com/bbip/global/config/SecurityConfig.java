@@ -1,4 +1,4 @@
-package com.bbip.config;
+package com.bbip.global.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

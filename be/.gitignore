@@ -38,6 +38,7 @@ out/
 
 ### application.properties ###
 .properties
+application-secret.yml
 
 ### 테스트 화면
 .html

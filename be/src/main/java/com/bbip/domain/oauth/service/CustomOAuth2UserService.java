@@ -1,8 +1,8 @@
 package com.bbip.domain.oauth.service;
 
-import com.bbip.domain.token.service.TokenService;
-import com.bbip.domain.user.entity.User;
-import com.bbip.domain.user.service.UserService;
+import com.bbip.domain.token.service.TokenServiceImpl;
+import com.bbip.domain.user.dto.UserDto;
+import com.bbip.domain.user.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -19,8 +19,8 @@ import java.util.Map;
 @Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final TokenService tokenService;
-    private final UserService userService;
+    private final TokenServiceImpl tokenService;
+    private final UserServiceImpl userService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -36,11 +36,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         log.info("name: {}", name);
         String oauthProvider = "google";
 
-        User user = userService.saveOrUpdateOAuthUser(email, name, oauthProvider);
-        log.info("user: {}", user);
+        UserDto user = userService.saveOrUpdateOAuthUser(email, name, oauthProvider);
+//        log.info("user: {}", user);
 
         // JWT 및 Refresh Token 발급
-        String accessToken = tokenService.generateAccessToken(email);
+        String accessToken = tokenService.generateAccessToken(email, user.getId());
         String refreshToken = tokenService.generateRefreshToken(email);
 
         // Redis에 Refresh Token 저장 (storeRefreshToken 호출)
