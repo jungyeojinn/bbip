@@ -4,12 +4,12 @@ USE bbip_db;
 
 -- 'user' 테이블 생성
 CREATE TABLE IF NOT EXISTS `user` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `name` VARCHAR(20) NOT NULL,
-    `email` VARCHAR(50) NOT NULL,
-    `nickname` VARCHAR(20) NOT NULL,
-    `deleted` TINYINT(1) NOT NULL
-);
+    `id` INT AUTO_INCREMENT PRIMARY KEY,  -- 'id' 필드, BIGINT 타입으로 자동 증가
+    `email` VARCHAR(255) NOT NULL,           -- 'email' 필드, 암호화된 이메일 저장 (VARCHAR 255)
+    `name` VARCHAR(20) NOT NULL,             -- 'name' 필드, 사용자의 이름 (VARCHAR 20)
+    `oauthProvider` VARCHAR(100),            -- 'oauthProvider' 필드, OAuth 제공자 정보 (VARCHAR 100)
+    `deleted` BOOLEAN NOT NULL DEFAULT false -- 'deleted' 필드, 소프트 삭제 처리 필드 (BOOLEAN)
+    );
 
 -- 'face' 테이블 생성
 CREATE TABLE IF NOT EXISTS `face` (
