@@ -10,6 +10,8 @@ import com.bbip.domain.rtmp.repository.RtmpServerRepository;
 import com.bbip.domain.rtmp.repository.StreamKeyRepository;
 import com.bbip.domain.user.entity.UserEntity;
 import com.bbip.domain.user.repository.UserRepository;
+import com.bbip.global.exception.NoSelectedRtmpServerException;
+import com.bbip.global.exception.RtmpServerNotFoundException;
 import com.bbip.global.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,9 @@ public class RtmpServiceImpl implements RtmpService {
         // JWT토큰에서 사용자 id 추출
         int userId = jwtUtil.getUserIdFromJWT(accessToken);
         List<RtmpResult> rtmpResults = streamKeyRepository.findStreamRtmpUrl(userId);
+        if (rtmpResults.isEmpty()) {
+            throw new NoSelectedRtmpServerException("송출하도록 설정된 서버가 한 개 이상 있어야 합니다.");
+        }
 
         StringBuilder result = new StringBuilder();
         for (Iterator<RtmpResult> i = rtmpResults.iterator(); i.hasNext();) {
@@ -61,6 +66,8 @@ public class RtmpServiceImpl implements RtmpService {
 
         UserEntity userEntity = userRepository.findById(userId);
         Optional<RtmpServerEntity> rtmpServerEntity = serverRepository.findById(streamKeyDto.getServerId());
+
+        // 유저-rtmp서버의 복합키 생성
         StreamKeyIdEntity streamKeyId = StreamKeyIdEntity.builder()
                                             .userId(userId)
                                             .serverId(streamKeyDto.getServerId()).build();
@@ -90,6 +97,9 @@ public class RtmpServiceImpl implements RtmpService {
         int userId = jwtUtil.getUserIdFromJWT(accessToken);
 
         List<RtmpResult> rtmpResults = streamKeyRepository.findAllRtmpUrl(userId);
+        if (rtmpResults.isEmpty()) {
+            throw new RtmpServerNotFoundException("해당 유저의 송출 가능한 스트리밍 서버 없음. 스트림키 등록 필요");
+        }
         List<StreamKeyDto> DtoResult = new ArrayList<>();
         for (RtmpResult rtmpResult : rtmpResults) {
             DtoResult.add(StreamKeyDto.builder()
@@ -107,6 +117,10 @@ public class RtmpServiceImpl implements RtmpService {
         int userId = jwtUtil.getUserIdFromJWT(accessToken);
 
         List<RtmpResult> rtmpResults = streamKeyRepository.findAllRtmpUrl(userId);
+        if (rtmpResults.isEmpty()) {
+            throw new RtmpServerNotFoundException("해당 유저의 송출가능한 스트리밍 서버 없음. 스트림키 등록 필요");
+        }
+
         List<StreamKeyDto> DtoResult = new ArrayList<>();
         for (RtmpResult rtmpResult : rtmpResults) {
             if (streamList.getServers().contains(rtmpResult.getServerId())) {

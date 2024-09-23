@@ -12,10 +12,10 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final VideoStreamHandler rtmpController;
+    private final VideoStreamHandler videoStreamHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(rtmpController, "/ws/rtmps").setAllowedOrigins("*");
+        registry.addHandler(videoStreamHandler, "/ws/rtmps").setAllowedOrigins("*");
     }
 }

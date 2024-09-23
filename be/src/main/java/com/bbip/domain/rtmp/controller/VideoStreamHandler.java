@@ -1,6 +1,8 @@
 package com.bbip.domain.rtmp.controller;
 
 import com.bbip.domain.rtmp.service.RtmpService;
+import com.bbip.global.exception.FlushFailException;
+import com.bbip.global.exception.TokenNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
@@ -32,9 +34,18 @@ public class VideoStreamHandler extends TextWebSocketHandler implements Disposab
 
         log.info("Video stream connection established: {}", session.getId());
 
-        // accessToken 추출하는 로직 필요
-        String accessToken = session.getHandshakeHeaders().getFirst("Authorization");
+        String query = session.getUri().getQuery();  // URL에서 쿼리 파라미터 가져오기
+        String accessToken = null;
 
+        if (query != null && query.contains("access-token")) {
+            accessToken = query.split("access-token=")[1];  // 쿼리 파라미터에서 토큰 추출
+            // accessToken을 검증하는 로직 추가
+            System.out.println("Access Token: " + accessToken);
+        }
+
+        if (accessToken == null) {
+            throw new TokenNotFoundException("웹소켓 핸드쉐이크 헤더에 엑세스 토큰이 없음");
+        }
         String rtmpUrl = rtmpService.getRtmpUrls(accessToken);
 
         ProcessBuilder processBuilder = new ProcessBuilder(
@@ -61,7 +72,7 @@ public class VideoStreamHandler extends TextWebSocketHandler implements Disposab
             try {
                 ffmpegInput.flush(); // 초기 플러시
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new FlushFailException("초기 flush 실패");
             }
         });
     }
@@ -78,7 +89,7 @@ public class VideoStreamHandler extends TextWebSocketHandler implements Disposab
                     ffmpegInput.write(payload);
                     ffmpegInput.flush();
                 } catch (IOException e) {
-                    log.error("Error while writing video stream message", e);
+                    throw new FlushFailException("비디오 스트림 메시지를 write중 오류 발생");
                 }
             });
         }
