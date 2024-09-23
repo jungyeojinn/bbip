@@ -1,5 +1,6 @@
 package com.bbip.global.config;
 
+import com.bbip.domain.oauth.service.CustomOAuth2SuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,9 @@ public class SecurityConfig {
     @Autowired
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Autowired
+    private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -26,12 +30,11 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth
                         .loginPage("/login")
-                        .defaultSuccessUrl("/home", true))
+                        .successHandler(customOAuth2SuccessHandler))  // 성공 핸들러 설정
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login"))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> response.sendRedirect("/login")));
-
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

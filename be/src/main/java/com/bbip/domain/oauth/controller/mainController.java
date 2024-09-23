@@ -15,4 +15,9 @@ public class mainController {
         return "index";  // templates/index.html 파일을 반환0
     }
 
+    @GetMapping("/home")
+    public String home2() { return "home";
+
+    }
+
 }
