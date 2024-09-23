@@ -22,7 +22,7 @@ public class UserController {
             description = "모든 필드 값 필수"
     )
     @PostMapping
-    public SingleResponse<UserDto> modifyUser(@RequestAttribute(value = "AccessToken", required = false) String accessToken,
+    public SingleResponse<UserDto> modifyUser(@RequestHeader(value = "Authorization", required = false) String accessToken,
                                               @RequestBody UserDto user) {
 
         // 유효성 검사
@@ -36,7 +36,7 @@ public class UserController {
             description = "accessToken을 사용해 사용자 정보 조회"
     )
     @GetMapping
-    public SingleResponse<UserDto> getUserDetail(@RequestAttribute(value = "AccessToken", required = false) String accessToken) {
+    public SingleResponse<UserDto> getUserDetail(@RequestHeader(value = "Authorization", required = false) String accessToken) {
 
         UserDto userDetail = userService.getUserDetail(accessToken);
         return SingleResponse.<UserDto>builder().
@@ -48,7 +48,7 @@ public class UserController {
             description = "accessToken을 사용해 사용자 탈퇴처리"
     )
     @DeleteMapping
-    public CommonResponse deleteUser(@RequestAttribute(value = "AccessToken", required = false) String accessToken) {
+    public CommonResponse deleteUser(@RequestHeader(value = "Authorization", required = false) String accessToken) {
 
         userService.deleteUser(accessToken);
         return new CommonResponse("유저 탈퇴 처리 완료");

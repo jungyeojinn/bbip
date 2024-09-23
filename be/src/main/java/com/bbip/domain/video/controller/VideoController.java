@@ -27,7 +27,7 @@ public class VideoController {
     )
     @PostMapping(consumes = "multipart/form-data")
     public CommonResponse saveVideo(
-            @RequestAttribute(value = "AccessToken", required = false) String accessToken,
+            @RequestHeader(value = "Authorization", required = false) String accessToken,
             @RequestParam("video") MultipartFile video) {
 
         if (video.isEmpty()) {
