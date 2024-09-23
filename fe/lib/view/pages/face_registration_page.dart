@@ -14,30 +14,25 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Face Detection Page'),
-      ),
       body: Stack(
         children: [
           Positioned(
-            top: 40, // 카메라 화면을 위로 올리기 위한 위치 조정
-            left: MediaQuery.of(context).size.width * 0.2, // 좌우 중앙 정렬
-            child: ClipOval(
-              // 원형으로 클리핑
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.6, // 가로 크기 설정
-                height: MediaQuery.of(context).size.width *
-                    0.6, // 높이를 가로 크기와 동일하게 설정하여 원형으로 만듦
-                child: AspectRatio(
-                  aspectRatio: 1, // 1:1 비율 설정
-                  child: CameraWidget(cameraIndex: 0), // 카메라 화면 표시
-                ),
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.5, // 화면의 50% 높이
+              decoration: BoxDecoration(
+                color: Colors.black, // 카메라 배경색
+              ),
+              child: ClipRRect(
+                child: CameraWidget(cameraIndex: 0), // 카메라 화면 표시
               ),
             ),
           ),
           // "얼굴 인식 중입니다..." 문구 추가
           const Positioned(
-            bottom: 240, // 화면 아래에서 120픽셀 위로 위치 조정
+            bottom: 240, // 화면 아래에서 240픽셀 위로 위치 조정
             left: 0,
             right: 0,
             child: Center(
