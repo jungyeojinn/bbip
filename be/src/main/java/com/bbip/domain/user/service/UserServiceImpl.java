@@ -40,15 +40,6 @@ public class UserServiceImpl implements UserService {
         return existingUser.get().toDto();  // 이미 등록된 사용자는 그대로 반환
     }
 
-//    @Override
-//    public UserDto createUser(UserDto userDto) {
-//        // 가입시 닉네임은 이름으로 기본설정
-//        userDto.setNickname(userDto.getName());
-//        UserEntity userEntity = userRepository.save(userDto.toEntity());
-//        log.info("신규 가입: {}", userEntity);
-//        return userEntity.toDto();
-//    }
-
     @Override
     public UserDto updateUser(String accessToken, UserDto user) {
         // JWT토큰에서 사용자 id 추출
@@ -63,11 +54,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto getUserDetail(String accessToken) {
 
-        //test
-        String email = jwtUtil.getUsernameFromJWT(accessToken);
-
         // JWT토큰에서 사용자 id 추출
-        int userId = 1;
+        int userId = jwtUtil.getUserIdFromJWT(accessToken);
 
         UserEntity userEntity = userRepository.findById(userId);
         log.info("유저 조회: {}", userEntity);

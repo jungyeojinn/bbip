@@ -26,7 +26,7 @@ public class RtmpController {
     )
     @PostMapping
     public SingleResponse<StreamKeyDto> modifyStreamKey(
-            @RequestAttribute(value = "AccessToken", required = false) String accessToken,
+            @RequestHeader(value = "Authorization", required = false) String accessToken,
             @RequestBody StreamKeyDto rtmpDto) {
 
         StreamKeyDto result = rtmpService.updateStreamkey(accessToken, rtmpDto);
@@ -41,7 +41,7 @@ public class RtmpController {
             description = "어떤 스트리밍 서버로 송출을 할지 선택하기 위한 목록으로, 스트림키에 대한 정보가 등록된 플랫폼 목록이 반환됨"
     )
     @GetMapping
-    public ListResponse<StreamKeyDto> findAll(@RequestAttribute(value = "AccessToken", required = false) String accessToken) {
+    public ListResponse<StreamKeyDto> findAll(@RequestHeader(value = "Authorization", required = false) String accessToken) {
 
         List<StreamKeyDto> result = rtmpService.getServers(accessToken);
 
@@ -56,7 +56,7 @@ public class RtmpController {
     )
     @PostMapping(value = "/streamList")
     public ListResponse<StreamKeyDto> modifyStreamList(
-            @RequestAttribute(value = "AccessToken", required = false) String accessToken,
+            @RequestHeader(value = "Authorization", required = false) String accessToken,
             @RequestBody StreamListDto streamList) {
 
         List<StreamKeyDto> result = rtmpService.updateStreamList(accessToken, streamList);

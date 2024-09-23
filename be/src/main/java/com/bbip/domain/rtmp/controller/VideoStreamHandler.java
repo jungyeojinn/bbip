@@ -33,7 +33,7 @@ public class VideoStreamHandler extends TextWebSocketHandler implements Disposab
         log.info("Video stream connection established: {}", session.getId());
 
         // accessToken 추출하는 로직 필요
-        String accessToken = session.getHandshakeHeaders().getFirst("accessToken");
+        String accessToken = session.getHandshakeHeaders().getFirst("Authorization");
 
         String rtmpUrl = rtmpService.getRtmpUrls(accessToken);
 

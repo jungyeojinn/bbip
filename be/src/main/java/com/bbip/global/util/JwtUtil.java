@@ -56,7 +56,7 @@ public class JwtUtil {
     public String getUsernameFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(JWT_SECRET)
-                .parseClaimsJws(token)
+                .parseClaimsJws(token.substring(7))
                 .getBody();
 
         return claims.getSubject();
@@ -66,7 +66,7 @@ public class JwtUtil {
     public Integer getUserIdFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(JWT_SECRET)
-                .parseClaimsJws(token)
+                .parseClaimsJws(token.substring(7))
                 .getBody();
 
         return claims.get("userId", Integer.class);
