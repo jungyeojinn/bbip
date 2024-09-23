@@ -3,6 +3,7 @@ package com.bbip.domain.oauth.service;
 import com.bbip.domain.token.service.TokenServiceImpl;
 import com.bbip.domain.user.dto.UserDto;
 import com.bbip.domain.user.service.UserServiceImpl;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -21,6 +22,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final TokenServiceImpl tokenService;
     private final UserServiceImpl userService;
+    private final HttpServletRequest httpServletRequest;  // HttpServletRequest 주입
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -37,18 +39,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String oauthProvider = "google";
 
         UserDto user = userService.saveOrUpdateOAuthUser(email, name, oauthProvider);
-//        log.info("user: {}", user);
 
         // JWT 및 Refresh Token 발급
-        String accessToken = tokenService.generateAccessToken(email, user.getId());
+        String accessToken = "Bearer " + tokenService.generateAccessToken(email, user.getId());
         String refreshToken = tokenService.generateRefreshToken(email);
 
-        // Redis에 Refresh Token 저장 (storeRefreshToken 호출)
+        // Redis에 Refresh Token 저장
         tokenService.generateRefreshToken(email);
 
-        // 여기서 토큰을 클라이언트로 전달 (예시: 로그로 출력하거나 응답으로 반환)
-        log.info("accessToken: {}", accessToken);
-        log.info("refreshToken: {}", refreshToken);
+        // HttpServletRequest에 토큰 저장
+        httpServletRequest.setAttribute("accessToken", accessToken);
+        httpServletRequest.setAttribute("refreshToken", refreshToken);
 
         return oAuth2User;
     }
