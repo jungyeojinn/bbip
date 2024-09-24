@@ -56,7 +56,7 @@ public class JwtUtil {
     public String getEmailFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(JWT_SECRET)
-                .parseClaimsJws(token)
+                .parseClaimsJws(resolveToken(token))
                 .getBody();
 
         return claims.getSubject();
@@ -66,7 +66,7 @@ public class JwtUtil {
     public Integer getUserIdFromJWT(String tokenWithBearer) {
         Claims claims = Jwts.parser()
                 .setSigningKey(JWT_SECRET)
-                .parseClaimsJws(tokenWithBearer.substring(7))
+                .parseClaimsJws(resolveToken(tokenWithBearer))
                 .getBody();
 
         return claims.get("userId", Integer.class);
@@ -89,5 +89,12 @@ public class JwtUtil {
             return bearerToken.substring(7);  // "Bearer " 이후의 토큰 부분만 추출
         }
         return null;
+    }
+
+    public String resolveToken(String token) {
+        if (token != null && token.startsWith(TOKEN_PREFIX)) {
+            return token.substring(7); // "Bearer " 제거
+        }
+        return token;
     }
 }
