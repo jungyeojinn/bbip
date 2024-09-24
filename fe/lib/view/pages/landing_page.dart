@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
+
+  final storage = const FlutterSecureStorage(); // Secure Storage 인스턴스 생성
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +45,7 @@ class LandingPage extends StatelessWidget {
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding:
-                const EdgeInsets.only(bottom: 60), // 화면 맨 아래에서 조금 위로 띄움
+                    const EdgeInsets.only(bottom: 60), // 화면 맨 아래에서 조금 위로 띄움
                 child: ElevatedButton.icon(
                   onPressed: () {
                     _signInWithGoogle(context); // Google 로그인 함수 호출
@@ -76,19 +80,34 @@ class LandingPage extends StatelessWidget {
   }
 
   Future<void> _signInWithGoogle(BuildContext context) async {
-    //   final GoogleSignIn googleSignIn = GoogleSignIn();
-    //   try {
-    //     final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-    //     if (googleUser != null) {
-    //       // 성공적으로 로그인했을 때의 처리
-    //       print('Google 로그인 성공: ${googleUser.displayName}');
-    //       // 예: 다음 화면으로 이동하거나, 사용자 정보 저장
-    //     }
-    //   } catch (error) {
-    //     print('Google 로그인 실패: $error');
-    //     // 로그인 실패 시 처리
-    //   }
     print('signUpWithGoogle Pressed');
-    Get.toNamed('/face_registration');
+
+    // Spring 서버로 로그인 요청 보내기
+    final response = await http.get(
+      Uri.parse('http://localhost:8080/oauth2/authorization/google'),
+    );
+
+    // 서버로부터 accessToken과 refreshToken 헤더 받기
+    if (response.statusCode == 200) {
+      String? accessToken = response.headers['accessToken'];
+      String? refreshToken = response.headers['refreshToken'];
+
+      if (accessToken != null && refreshToken != null) {
+        // Secure Storage에 토큰 저장
+        await storage.write(key: 'accessToken', value: accessToken);
+        await storage.write(key: 'refreshToken', value: refreshToken);
+
+        print('Tokens saved in secure storage');
+        print('Access Token: $accessToken');
+        print('Refresh Token: $refreshToken');
+
+        // 페이지 이동
+        Get.toNamed('/face_registration');
+      } else {
+        print('Token not found in response headers');
+      }
+    } else {
+      print('Failed to authenticate with Google');
+    }
   }
 }
