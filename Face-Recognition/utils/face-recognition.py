@@ -32,7 +32,7 @@ def get_face_embedding(model, face_pixels):
     return embedding[0]
 
 # 얼굴 임베딩을 비교하는 함수 (L2 거리 사용)
-def is_match(known_embedding, candidate_embedding, threshold=9):  # 임계값 조정 가능
+def is_match(known_embedding, candidate_embedding, threshold=8.5):  # 임계값 조정 가능
     distance = np.linalg.norm(known_embedding - candidate_embedding)
     return distance < threshold
 
@@ -81,7 +81,7 @@ while True:
 
         # YOLO로 감지된 얼굴에 대해 KCF 추적기 추가
         for (xmin, ymin, w, h) in face_boxes:
-            tracker = cv2.TrackerKCF_create()
+            tracker = cv2.TrackerKCF_create()  # 최신 OpenCV 버전에서 사용
             trackers.append((tracker, (xmin, ymin, w, h)))
             tracker.init(frame, (xmin, ymin, w, h))
             # 추적된 얼굴 부분을 잘라내서 얼굴 인식 수행
@@ -114,13 +114,18 @@ while True:
             cv2.putText(frame, name, (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
             if name == "Unknown":
-                # 얼굴 부분 블러 처리
+                # 얼굴 부분을 원형으로 블러 처리
                 if face_region.size > 0:
-                    blur_face = cv2.GaussianBlur(face_region, (51, 51), 20)
-                    frame[ymin:ymax, xmin:xmax] = blur_face
+                    mask = np.zeros_like(frame)
+                    center = (xmin + w // 2, ymin + h // 2)
+                    radius = int(min(w, h) / 2)
+                    cv2.circle(mask, center, radius+10, (255, 255, 255), -1)
+
+                    # 블러 처리된 이미지를 생성하고 원형 마스크를 적용하여 블러 처리
+                    blurred_frame = cv2.GaussianBlur(frame, (11, 11), 20)
+                    frame = np.where(mask == (255, 255, 255), blurred_frame, frame)
             else:
                 # 등록된 얼굴은 블러 해제 (아무 처리도 하지 않음)
-
                 pass
         else:
             # 추적 실패 시 해당 추적기 제거
