@@ -22,6 +22,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
+
+        log.info("success 핸들러 호출");
         // 토큰 가져오기
         String accessToken = (String) request.getAttribute("accessToken");
         String refreshToken = (String) request.getAttribute("refreshToken");
@@ -33,6 +35,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         log.info("response: {}", response.getHeader("accessToken"));
         log.info("response: {}", response.getHeader("refreshToken"));
+
 
 
     }
