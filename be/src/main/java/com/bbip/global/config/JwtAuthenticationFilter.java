@@ -32,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 인증 객체 생성 후 SecurityContext에 저장
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userEmail, null, new ArrayList<>());
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        }
+        } else log.info("헤더에 토큰이 없어요");
 
         try{
             log.info("doFilter");

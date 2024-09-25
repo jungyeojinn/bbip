@@ -2,99 +2,133 @@ package com.bbip.domain.rtmp.controller;
 
 import com.bbip.domain.rtmp.service.RtmpService;
 import com.bbip.global.exception.FlushFailException;
-import com.bbip.global.exception.TokenNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.messaging.rsocket.annotation.ConnectMapping;
 import org.springframework.stereotype.Controller;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.*;
 
 @Controller
 @Slf4j
 @RequiredArgsConstructor
 public class VideoStreamController {
 
-    private Process ffmpegProcess;
-    private BufferedOutputStream ffmpegInput;
+    private final Map<String, Process> ffmpegProcessMap = new ConcurrentHashMap<>();
+    private final Map<String, BufferedOutputStream> ffmpegInputMap = new ConcurrentHashMap<>();
+    private final Map<String, Future<?>> ffmpegProcessFutureMap = new ConcurrentHashMap<>();
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-    private Future<?> ffmpegProcessFuture;
     private final RtmpService rtmpService;
 
-    @MessageMapping("/ws/rtmps")
-    public void handleVideoStream(@Payload byte[] payload, @Header("Authorization") String accessToken) {
-//        log.info("Received video stream message via STOMP");
+    private static final List<String> OUTPUT_FORM = List.of(
+            "-c:v", "libx264", // 비디오 코덱
+            "-preset", "ultrafast", // 인코딩 속도 증가
+            "-b:v", "2M", // 비디오 비트레이트
+            "-c:a", "aac", // 오디오 코덱
+            "-b:a", "128k", // 오디오 비트레이트
+            "-g", "120",  // GOP 크기 설정 (예: 4초에 해당)
+            "-f", "flv"
+    );
 
-        if (ffmpegInput == null || !ffmpegProcess.isAlive()) {
+    @ConnectMapping("/ws/rtmps")
+    public void handleConnect(@Header("simpSessionId") String sessionId, @Header("Authorization") String accessToken) {
+        log.info("token at ConnectMapping: {}", accessToken);
+        if (!ffmpegProcessMap.containsKey(sessionId)) {
             // FFmpeg 프로세스 초기화
-            initializeFfmpegProcess(accessToken);
+            initializeFfmpegProcess(sessionId, accessToken);
         }
-
-        // 비동기적으로 FFmpeg에 비디오 데이터 전송
-        executorService.submit(() -> {
-            try {
-                ffmpegInput.write(payload);
-                ffmpegInput.flush();
-            } catch (IOException e) {
-                throw new FlushFailException("비디오 스트림 메시지를 write중 오류 발생");
-            }
-        });
     }
 
-    private void initializeFfmpegProcess(String accessToken) {
-        log.info("Initializing FFmpeg process");
+    @MessageMapping("/ws/rtmps")
+    public void handleVideoStream(@Payload byte[] payload, @Header("simpSessionId") String sessionId) {
+        if (ffmpegProcessMap.containsKey(sessionId) && ffmpegProcessMap.get(sessionId).isAlive()) {
+            // 비동기적으로 FFmpeg에 비디오 데이터 전송
+            executorService.submit(() -> {
+                BufferedOutputStream ffmpegInput = ffmpegInputMap.get(sessionId);
+                try {
+                    ffmpegInput.write(payload);
+                    ffmpegInput.flush();
+                } catch (IOException e) {
+                    throw new FlushFailException("비디오 스트림 메시지를 write 중 오류 발생");
+                }
+            });
+        } else {
+            log.error("FFmpeg 프로세스가 존재하지 않거나 종료되었습니다. 세션 ID: {}", sessionId);
+        }
+    }
 
-        String rtmpUrl = rtmpService.getRtmpUrls(accessToken);
+    public void initializeFfmpegProcess(String sessionId, String accessToken) {
+        log.info("Initializing FFmpeg process for session: {}", sessionId);
 
-        ProcessBuilder processBuilder = new ProcessBuilder(
+        List<String> rtmpUrls = rtmpService.getRtmpUrls(accessToken);
+        List<String> command = new ArrayList<>(List.of(
                 "ffmpeg",
                 "-v", "error",
                 "-f", "webm",  // 입력 포맷
-                "-i", "pipe:0", // 표준 입력 사용
-                "-c:v", "libx264", // 비디오 코덱
-                "-preset", "ultrafast", // 인코딩 속도 증가
-                "-b:v", "2M", // 비디오 비트레이트
-                "-c:a", "aac", // 오디오 코덱
-                "-b:a", "128k", // 오디오 비트레이트
-                "-f", "tee",  // 동시 송출을 위해 tee 멀티플렉서 사용
-                rtmpUrl  // 유튜브 RTMP 서버 URL 목록
-        );
+                "-i", "pipe:0" // 표준 입력 사용
+        ));
+
+        for (String rtmpUrl : rtmpUrls) {
+            command.addAll(OUTPUT_FORM);
+            command.add(rtmpUrl);
+        }
+
+        ProcessBuilder processBuilder = new ProcessBuilder(command);
 
         try {
-            ffmpegProcess = processBuilder.start();
-            ffmpegInput = new BufferedOutputStream(ffmpegProcess.getOutputStream());
+            Process ffmpegProcess = processBuilder.start();
+            BufferedOutputStream ffmpegInput = new BufferedOutputStream(ffmpegProcess.getOutputStream());
+
+            // FFmpeg 프로세스 및 입력 스트림 저장
+            ffmpegProcessMap.put(sessionId, ffmpegProcess);
+            ffmpegInputMap.put(sessionId, ffmpegInput);
+
+            // 비동기적으로 FFmpeg 프로세스를 실행
+            Future<?> ffmpegProcessFuture = executorService.submit(() -> {
+                try {
+                    ffmpegProcess.waitFor(); // 프로세스가 종료될 때까지 대기
+                } catch (InterruptedException e) {
+                    log.error("FFmpeg 프로세스 대기 중 인터럽트 발생", e);
+                }
+            });
+            ffmpegProcessFutureMap.put(sessionId, ffmpegProcessFuture);
         } catch (IOException e) {
             log.error("FFmpeg 프로세스 시작 실패", e);
             throw new RuntimeException("FFmpeg 프로세스 시작 실패", e);
         }
-
-        // 버추얼 쓰레드를 통해 FFmpeg 프로세스 비동기 처리
-        ffmpegProcessFuture = executorService.submit(() -> {
-            try {
-                ffmpegInput.flush(); // 초기 플러시
-            } catch (IOException e) {
-                throw new FlushFailException("초기 flush 실패");
-            }
-        });
     }
 
-    // 리소스 해제 메소드
-    public void closeFfmpegResources() throws IOException {
-        if (ffmpegInput != null) {
-            ffmpegInput.close();
+    public void closeFfmpegResources(String sessionId) throws IOException {
+        if (ffmpegInputMap.containsKey(sessionId)) {
+            BufferedOutputStream ffmpegInput = ffmpegInputMap.get(sessionId);
+            if (ffmpegInput != null) {
+                ffmpegInput.close();
+            }
         }
-        if (ffmpegProcess != null) {
-            ffmpegProcess.destroy();
+        if (ffmpegProcessMap.containsKey(sessionId)) {
+            Process ffmpegProcess = ffmpegProcessMap.get(sessionId);
+            if (ffmpegProcess != null) {
+                ffmpegProcess.destroy();
+            }
         }
-        if (ffmpegProcessFuture != null) {
-            ffmpegProcessFuture.cancel(true);
+        if (ffmpegProcessFutureMap.containsKey(sessionId)) {
+            Future<?> ffmpegProcessFuture = ffmpegProcessFutureMap.get(sessionId);
+            if (ffmpegProcessFuture != null) {
+                ffmpegProcessFuture.cancel(true);
+            }
         }
+
+        // 맵에서 해당 세션의 자원 제거
+        ffmpegProcessMap.remove(sessionId);
+        ffmpegInputMap.remove(sessionId);
+        ffmpegProcessFutureMap.remove(sessionId);
     }
 }
