@@ -16,34 +16,65 @@ class MyPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 프로필 섹션
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: const [
                 // 동그란 사진
                 CircleAvatar(
-                  radius: 30,
-                  backgroundImage:
-                      NetworkImage('https://via.placeholder.com/150'),
+                  radius: 40, // 이미지 크기를 좀 더 키움
+                  backgroundImage: AssetImage('assets/jangwoo.png'),
                 ),
-                SizedBox(width: 16),
-                // 이메일 텍스트
-                Text(
-                  'xxx@gmail.com',
-                  style: TextStyle(fontSize: 18),
+                SizedBox(width: 20),
+                // 이메일 및 사용자 정보 텍스트
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Jangwoo Lee',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'xxx@gmail.com',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            // 플랫폼 추가 버튼
-            const Text(
-              '플랫폼 추가',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            // 플랫폼 추가 섹션
+            Row(
+              children: const [
+                Text(
+                  '플랫폼 추가',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(width: 4),
+                // i 버튼 추가 (Tooltip 사용)
+                Tooltip(
+                  message: '송출하고 싶은 플랫폼의 RTMP KEY를 입력해서 송출을 할 수 있습니다.',
+                  child: Icon(
+                    Icons.info_outline,
+                    color: Colors.black,
+                    size: 20,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             // Dotted Border Button
             DottedBorder(
-              color: Colors.black, // 테두리 색상
+              color: Colors.blueAccent, // 테두리 색상을 파란색으로 변경
               strokeWidth: 2, // 테두리 두께
-              dashPattern: const [5, 3], // 대시 패턴 설정
+              dashPattern: const [8, 4], // 대시 패턴 설정
               borderType: BorderType.RRect, // 둥근 모서리
               radius: const Radius.circular(12), // 둥글게 할 반경 설정
               child: GestureDetector(
@@ -53,40 +84,73 @@ class MyPage extends StatelessWidget {
                 },
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   child: const Center(
                     child: Text(
                       '플랫폼 추가 +',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              '얼굴 추가',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+            // 얼굴 추가 섹션
             Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    // + 버튼 클릭 시 로직 추가
-                  },
-                  icon: const Icon(Icons.add),
-                  style: IconButton.styleFrom(backgroundColor: Colors.grey),
+              children: const [
+                Text(
+                  '얼굴 추가',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Add Face',
-                  style: TextStyle(fontSize: 18),
+                SizedBox(width: 4),
+                // i 버튼 추가 (Tooltip 사용)
+                Tooltip(
+                  message: '송출 화면에 Blur 표시가 안되게 할 인물들을 추가할 수 있습니다',
+                  child: Icon(
+                    Icons.info_outline,
+                    color: Colors.black,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
+            DottedBorder(
+              color: Colors.blueAccent, // 테두리 색상을 파란색으로 변경
+              strokeWidth: 2, // 테두리 두께
+              dashPattern: const [8, 4], // 대시 패턴 설정
+              borderType: BorderType.RRect, // 둥근 모서리
+              radius: const Radius.circular(12), // 둥글게 할 반경 설정
+              child: GestureDetector(
+                onTap: () {},
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: const Center(
+                    child: Text(
+                      '얼굴 추가 +',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueAccent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
             // 사용자 프로필 이미지 리스트
+            const Text(
+              '얼굴 목록',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
             ...List.generate(3, (index) => _buildProfileRow('xxx@gmail.com')),
           ],
         ),
@@ -102,16 +166,16 @@ class MyPage extends StatelessWidget {
           children: [
             const CircleAvatar(
               radius: 24,
-              backgroundImage: NetworkImage('https://via.placeholder.com/150'),
+              backgroundImage: AssetImage('assets/jangwoo.png'),
             ),
             const SizedBox(width: 16),
             Text(
               email,
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 16, color: Colors.black),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -135,12 +199,19 @@ class MyPage extends StatelessWidget {
               mainAxisSpacing: 10,
               children: [
                 _buildPlatformButton(
-                    context, 'afreecatv', 'assets/afreecatv-icon.png'),
+                    context, 'youtube', 'assets/youtube-icon.png'),
+                _buildPlatformButton(
+                    context, 'twitch', 'assets/twitch-icon.png'),
+                _buildPlatformButton(
+                    context, 'afreeca_tv', 'assets/afreecatv-icon.png'),
                 _buildPlatformButton(context, 'chzzk', 'assets/chzzk-icon.png'),
                 _buildPlatformButton(
-                    context, 'instagram', 'assets/instagram-icon.png'),
+                    context, 'periscope', 'assets/periscope-icon.png'),
                 _buildPlatformButton(
-                    context, 'youtube', 'assets/youtube-icon.png'),
+                    context, 'facebook', 'assets/facebook-icon.png'),
+                _buildPlatformButton(
+                    context, 'd_live', 'assets/dlive-icon.png'),
+                _buildPlatformButton(context, 'trovo', 'assets/trovo-icon.png'),
                 _buildPlatformButton(context, 'custom', null, text: '커스텀RTMP'),
               ],
             ),
@@ -214,7 +285,7 @@ class MyPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    const TextField(
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '스트림 URL을 입력하세요',
@@ -229,7 +300,7 @@ class MyPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    TextField(
+                    const TextField(
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '스트림 Key를 입력하세요',
@@ -248,7 +319,7 @@ class MyPage extends StatelessWidget {
                           onPressed: () {
                             Navigator.of(context).pop(); // 다이얼로그 닫기
                           },
-                          child: const Text('닫기'),
+                          child: const Text('취소'),
                         ),
                       ],
                     ),

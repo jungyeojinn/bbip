@@ -43,7 +43,9 @@ class LandingPage extends StatelessWidget {
                 padding:
                     const EdgeInsets.only(bottom: 60), // 화면 맨 아래에서 조금 위로 띄움
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.toNamed('/face_registration');
+                  },
                   icon: Image.asset(
                     'assets/google_logo.png', // 구글 로고 이미지 파일
                     height: 24.0,
