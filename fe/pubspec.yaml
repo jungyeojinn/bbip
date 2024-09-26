@@ -33,6 +33,7 @@ dependencies:
   carousel_slider:
   image_picker:
   permission_handler:
+  dotted_border:
   flutter:
     sdk: flutter
 
