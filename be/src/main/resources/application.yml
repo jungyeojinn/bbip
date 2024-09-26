@@ -86,13 +86,13 @@ springdoc:
   show-actuator: true
   default-produces-media-type: application/json
 
-logging:
-  level:
-    org:
-      springframework:
-        security: DEBUG
-        web:
-          socket: DEBUG
-          socket.sockjs: DEBUG
-          socket.messaging: DEBUG
-        messaging: DEBUG
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        security: DEBUG
+#        web:
+#          socket: DEBUG
+#          socket.sockjs: DEBUG
+#          socket.messaging: DEBUG
+#        messaging: DEBUG

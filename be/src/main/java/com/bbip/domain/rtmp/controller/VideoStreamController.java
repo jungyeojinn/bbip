@@ -40,7 +40,7 @@ public class VideoStreamController {
 
     @ConnectMapping("/ws/rtmps")
     public void handleConnect(@Header("simpSessionId") String sessionId, @Header("Authorization") String accessToken) {
-        log.info("token at ConnectMapping: {}", accessToken);
+        log.info("여긴 핸들러 커넥트");
         if (!ffmpegProcessMap.containsKey(sessionId)) {
             // FFmpeg 프로세스 초기화
             initializeFfmpegProcess(sessionId, accessToken);
@@ -55,6 +55,7 @@ public class VideoStreamController {
                 BufferedOutputStream ffmpegInput = ffmpegInputMap.get(sessionId);
                 try {
                     ffmpegInput.write(payload);
+                    log.info("{} written on {}", payload.length, sessionId);
                     ffmpegInput.flush();
                 } catch (IOException e) {
                     throw new FlushFailException("비디오 스트림 메시지를 write 중 오류 발생");
@@ -66,7 +67,11 @@ public class VideoStreamController {
     }
 
     public void initializeFfmpegProcess(String sessionId, String accessToken) {
-        log.info("Initializing FFmpeg process for session: {}", sessionId);
+        if (ffmpegProcessMap.containsKey(sessionId)) {
+            log.info("FFmpeg 프로세스가 이미 존재함: {}", sessionId);
+            return;
+        }
+        log.info("FFmpeg 프로세스 초기화: {}", sessionId);
 
         List<String> rtmpUrls = rtmpService.getRtmpUrls(accessToken);
         List<String> command = new ArrayList<>(List.of(

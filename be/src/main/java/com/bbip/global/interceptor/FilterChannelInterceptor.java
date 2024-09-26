@@ -1,5 +1,6 @@
 package com.bbip.global.interceptor;
 
+import com.bbip.domain.rtmp.controller.VideoStreamController;
 import com.bbip.global.exception.InvalidTokenException;
 import com.bbip.global.exception.NoTokenException;
 import com.bbip.global.util.JwtUtil;
@@ -25,15 +26,17 @@ import java.util.Objects;
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)
 public class FilterChannelInterceptor implements ChannelInterceptor {
 
+    private final VideoStreamController videoStreamController;
     private final JwtUtil jwtUtil;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
-        log.info("필터체인인터셉터 먼저 들어왔어유");
+        log.info("필터체인인터셉터 들어왔어유");
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(message);
 
-        if (Objects.equals(headerAccessor.getCommand(), StompCommand.CONNECT)
-                || Objects.equals(headerAccessor.getCommand(), StompCommand.SEND)) {
+        if (Objects.equals(headerAccessor.getCommand(), StompCommand.CONNECT)) {
+            String sessionId = headerAccessor.getSessionId();
+            log.info("연결 요청한 세션 아이디: {}", sessionId);
             String token = removeBrackets(String.valueOf(headerAccessor.getNativeHeader("Authorization")));
             log.info("토큰이 들어왔나: "+ token);
             if (token.isBlank()) {
@@ -43,7 +46,22 @@ public class FilterChannelInterceptor implements ChannelInterceptor {
 
             if (!jwtUtil.validateToken(token))
                 throw new InvalidTokenException("유효하지 않은 토큰");
+
+            videoStreamController.initializeFfmpegProcess(sessionId, token);
         }
+
+//        if (Objects.equals(headerAccessor.getCommand(), StompCommand.CONNECT)
+//                || Objects.equals(headerAccessor.getCommand(), StompCommand.SEND)) {
+//            String token = removeBrackets(String.valueOf(headerAccessor.getNativeHeader("Authorization")));
+//            log.info("토큰이 들어왔나: "+ token);
+//            if (token.isBlank()) {
+//                throw new NoTokenException("헤더에 토큰이 없음");
+//            }
+//            token = jwtUtil.resolveToken(token);
+//
+//            if (!jwtUtil.validateToken(token))
+//                throw new InvalidTokenException("유효하지 않은 토큰");
+//        }
 
         return message;
     }
