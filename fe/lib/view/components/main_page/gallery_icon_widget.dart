@@ -26,17 +26,33 @@ class GalleryIconWidgetState extends State<GalleryIconWidget> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      left: 50.0,
+      left: 60.0,
       bottom: 0,
       child: IconButton(
-        icon: const Icon(
-          Icons.photo_library,
-          color: Colors.white,
-          size: 40.0,
-        ),
         onPressed: () {
           getImage(ImageSource.gallery);
         },
+        icon: Container(
+          width: 48.0,
+          height: 48.0,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.white, // 테두리 색상
+              width: 1.0, // 테두리 두께
+            ),
+            borderRadius: BorderRadius.circular(18.0), // 네모와 원 중간 정도의 모양
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18.0), // 동일한 반지름으로 이미지도 자르기
+            child: Image.asset(
+              // 나중에 gallery에 있는 첫 번째 사진으로 바꿀 것임.
+              'assets/iu.png',
+              width: 48.0,
+              height: 48.0,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
       ),
     );
   }

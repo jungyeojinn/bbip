@@ -25,6 +25,8 @@ class CameraWidgetState extends State<CameraWidget> {
 
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
+    print(widget.cameraIndex);
+    print('hi');
     _controller = CameraController(
       cameras[widget.cameraIndex], // 변경: 선택된 카메라 인덱스를 사용
       ResolutionPreset.high,
