@@ -31,9 +31,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         response.addHeader("accessToken", accessToken);
         response.addHeader("refreshToken", refreshToken);
 
-        log.info("response: {}", response.getHeader("accessToken"));
-        log.info("response: {}", response.getHeader("refreshToken"));
-
+        log.info("accessToken: {}", response.getHeader("accessToken"));
+        log.info("refreshToken: {}", response.getHeader("refreshToken"));
 
     }
 }

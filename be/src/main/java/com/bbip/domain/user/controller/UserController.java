@@ -25,7 +25,6 @@ public class UserController {
     public SingleResponse<UserDto> modifyUser(@RequestHeader(value = "Authorization", required = false) String accessToken,
                                               @RequestBody UserDto user) {
 
-        // 유효성 검사
         UserDto modifiedUser = userService.updateUser(accessToken, user);
         return SingleResponse.<UserDto>builder().
                 message("사용자 정보 수정 완료").data(modifiedUser).build();

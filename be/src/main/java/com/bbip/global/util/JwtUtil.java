@@ -21,12 +21,12 @@ public class JwtUtil {
     private static final String TOKEN_PREFIX = "Bearer ";
 
     // Access Token 생성
-    public String generateToken(String username, Integer userId) {
+    public String generateToken(String email, Integer userId) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + JWT_EXPIRATION);
 
-        return Jwts.builder()
-                .setSubject(username)
+        return TOKEN_PREFIX + Jwts.builder()
+                .setSubject(email)
                 .claim("userId", userId)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
@@ -35,12 +35,12 @@ public class JwtUtil {
     }
 
     // Refresh Token 생성
-    public String generateRefreshToken(String username) {
+    public String generateRefreshToken(String email) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + REFRESH_TOKEN_EXPIRATION*1000);
 
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(email)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, JWT_SECRET)
@@ -53,20 +53,20 @@ public class JwtUtil {
     }
 
     // JWT 토큰에서 사용자 이름 추출
-    public String getUsernameFromJWT(String token) {
+    public String getEmailFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(JWT_SECRET)
-                .parseClaimsJws(token.substring(7))
+                .parseClaimsJws(resolveToken(token))
                 .getBody();
 
         return claims.getSubject();
     }
 
     // JWT 토큰에서 사용자 아이디 추출
-    public Integer getUserIdFromJWT(String token) {
+    public Integer getUserIdFromJWT(String tokenWithBearer) {
         Claims claims = Jwts.parser()
                 .setSigningKey(JWT_SECRET)
-                .parseClaimsJws(token.substring(7))
+                .parseClaimsJws(resolveToken(tokenWithBearer))
                 .getBody();
 
         return claims.get("userId", Integer.class);
@@ -89,5 +89,12 @@ public class JwtUtil {
             return bearerToken.substring(7);  // "Bearer " 이후의 토큰 부분만 추출
         }
         return null;
+    }
+
+    public String resolveToken(String token) {
+        if (token != null && token.startsWith(TOKEN_PREFIX)) {
+            return token.substring(7); // "Bearer " 제거
+        }
+        return token;
     }
 }
