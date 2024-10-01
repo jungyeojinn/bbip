@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>Video Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+</head>
+<body>
+<button id="startButton">Start</button>
+<video id="remoteVideo" autoplay playsinline></video>
+<script>
+    const remoteVideo = document.getElementById('remoteVideo');
+    const startButton = document.getElementById('startButton');
+    let peerConnection;
+
+    const socket = new SockJS('https://j11a203.p.ssafy.io/ws');
+    const stompClient = new StompJs.Client({
+        webSocketFactory: () => socket,
+        reconnectDelay: 0,  // 자동 재연결 비활성화
+        debug: (str) => {
+        console.log(`STOMP 디버그 로그: ${str}`);
+    }
+    });
+
+    stompClient.onConnect = (frame) => {
+        console.log('STOMP 연결 성공', frame);
+
+        stompClient.subscribe('/sub/client/123', (message) => {
+            console.log('subscribe success', message.body)
+            const signal = JSON.parse(message.body);
+            handleSignal(signal);
+        });
+
+        console.log('STOMP 구독 요청 완료');
+    };
+
+    stompClient.activate();
+
+    // let peerConnection;
+    let candidateQueue = [];  // ICE 후보를 임시로 저장할 큐
+
+    function handleSignal(signal) {
+        console.log(`call handleSignal, type: ${signal.type}`);
+        switch (signal.type) {
+            case 'answer':
+                handleAnswer(signal.data);
+                break;
+            case 'candidate':
+                addCandidate(signal.data);
+                break;
+        }
+    }
+
+    startButton.addEventListener('click', () => {
+        sendOffer();
+    });
+
+    function sendOffer() {
+        console.log("call sendOffer");
+        peerConnection = new RTCPeerConnection();
+
+        // 로컬 스트림을 추가 (getUserMedia로 스트림을 얻은 후 실행)
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
+            stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));  // 로컬 스트림의 트랙을 peerConnection에 추가
+            console.log("로컬 스트림 추가 완료", stream);
+
+            // Offer 생성
+            peerConnection.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true }).then(async offer => {
+                console.log('offer is created ', offer);
+                await peerConnection.setLocalDescription(offer);
+                console.log(peerConnection);
+                stompClient.publish({
+                    destination: '/pub/cam/123',
+                    body: JSON.stringify({ type: 'offer', data: offer })
+                });
+            });
+        }).catch(error => {
+            console.error("Error accessing media devices.", error);
+        });
+
+        peerConnection.onicecandidate = event => {
+            console.log('icecandidate event occurred ', event);
+            console.log(`on icecandidate: ${event.candidate}`);
+            if (event.candidate) {
+                console.log('publish candidate message');
+                // ICE 후보 정보를 전송할 때 foundation 포함
+                const candidateData = {
+                    type: 'candidate',
+                    data: {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex,
+                        foundation: event.candidate.foundation,  // foundation 필드 추가
+                        component: event.candidate.component,
+                        priority: event.candidate.priority,
+                        protocol: event.candidate.protocol,
+                        ip: event.candidate.address,
+                        port: event.candidate.port,
+                        type: event.candidate.type,
+                        tcpType: event.candidate.tcpType
+                    }
+                };
+                stompClient.publish({
+                    destination: '/pub/cam/123',
+                    body: JSON.stringify({ type: 'candidate', data: candidateData })
+                });
+            }
+        };
+
+        // peerConnection.ontrack = event => {
+        //     console.log('ontrack event occurred');
+        //     const [remoteStream] = event.streams;
+        //     console.log(event.streams);
+        //     console.log(remoteStream);
+        //     remoteVideo.srcObject = remoteStream;
+        //     remoteVideo.play();
+        // };
+        peerConnection.ontrack = event => {
+            console.log('ontrack event occurred');
+            const [remoteStream] = event.streams;
+            console.log(event.streams);
+            console.log(remoteStream);
+            
+            // 비디오 소스를 설정하고 나서 play() 호출
+            if (remoteStream) {
+                remoteVideo.srcObject = remoteStream;
+                remoteVideo.play().catch(error => {
+                    console.error("비디오 재생 중 오류 발생: ", error);
+                });
+            }
+        };
+
+
+    }
+
+    // function handleAnswer(answer) {
+    //     console.log('call handleAnswer');
+    //     console.log('answer is ', answer);
+    //     peerConnection.setRemoteDescription(new RTCSessionDescription(answer)).then(() => {
+    //         console.log('Remote Description 설정 완료');
+    //     }).catch(error => {
+    //         console.error('Remote Description 설정 오류:', error);
+    //     });
+    // }
+
+    // function addCandidate(candidate) {
+    //     console.log('call addCandidate');
+    //     console.log('candidate is ', candidate);
+    //     if (peerConnection.remoteDescription) {
+    //         peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(error => {
+    //             console.error('ICE 후보 추가 실패:', error);
+    //         });
+    //     } else {
+    //         console.error('Remote Description이 설정되지 않았습니다.');
+    //     }
+    // }
+
+    function handleAnswer(answer) {
+        console.log('call handleAnswer');
+        console.log('answer is ', answer);
+        peerConnection.setRemoteDescription(new RTCSessionDescription(answer)).then(() => {
+            console.log('Remote Description 설정 완료');
+            
+            // Remote Description 설정 후 ICE 후보 추가
+            candidateQueue.forEach(candidate => {
+                peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+                    .then(() => console.log('ICE 후보 추가 완료'))
+                    .catch(error => console.error('ICE 후보 추가 중 오류 발생', error));
+            });
+            candidateQueue = [];  // 큐를 비움
+        }).catch(error => {
+            console.error('Remote Description 설정 중 오류 발생', error);
+        });
+    }
+
+    function addCandidate(candidate) {
+        console.log('call addCandidate');
+        console.log('candidate is ', candidate);
+        
+        if (peerConnection.remoteDescription) {
+            // Remote Description이 설정되었으면 바로 추가
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+                .then(() => console.log('ICE 후보 추가 완료'))
+                .catch(error => console.error('ICE 후보 추가 중 오류 발생', error));
+        } else {
+            // 설정되지 않았으면 큐에 저장
+            console.log('Remote Description이 아직 설정되지 않았습니다. 후보를 큐에 저장합니다.');
+            candidateQueue.push(candidate);
+        }
+    }
+</script>
+</body>
+</html>
