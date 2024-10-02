@@ -46,7 +46,7 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     final cameras = await availableCameras();
     _cameraController = CameraController(
       cameras[1],
-      ResolutionPreset.high,
+      ResolutionPreset.medium,
     );
     await _cameraController.initialize();
     setState(() {});
