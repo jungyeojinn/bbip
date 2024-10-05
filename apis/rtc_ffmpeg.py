@@ -3,11 +3,12 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import ssl
 import uuid
 from fastapi.responses import HTMLResponse
-import logging
 import time
+import subprocess
 
 import cv2
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -20,40 +21,92 @@ from utils import face_blur_yolo as yolo
 
 router = APIRouter()
 
-
 # 기본 설정
 ROOT = os.path.dirname(__file__)
 logger = logging.getLogger("pc")
 pcs = set()
 relay = MediaRelay()
+
+# 전역 FFmpeg 프로세스
+ffmpeg_process = None
+
+# 로그 레벨을 ERROR로 설정하여 불필요한 정보성 로그 비활성화
+logging.getLogger().setLevel(logging.ERROR)
 model = yolo.load_model()
 
-class VideoTransformTrack(MediaStreamTrack):
-    kind = "video"
-    # 모델 로드
-    global model
-    
+# FFmpeg 프로세스를 시작하는 함수
+def start_ffmpeg_process():
+    global ffmpeg_process
+    if ffmpeg_process is None:
+        ffmpeg_command = [
+            'ffmpeg', '-re',
+            '-loglevel', 'debug',
+            '-f', 'rawvideo',
+            '-pixel_format', 'bgr24',
+            '-video_size', '640x480',  # 비디오 크기 설정
+            '-r', '30',
+            '-i', 'pipe:0',  # stdin에서 비디오 입력
+            '-f', 's16le',  # 오디오 입력 포맷을 설정
+            '-ar', '44100',  # 샘플링 레이트
+            '-ac', '2',      # 스테레오 채널
+            '-i', 'pipe:1',  # stdin에서 오디오 입력
+            '-c:v', 'libx264',
+            '-b:v', '1500k',  # 비디오 비트레이트
+            '-c:a', 'aac',    # 오디오 코덱 설정
+            '-b:a', '128k',   # 오디오 비트레이트
+            '-preset', 'fast',
+            '-pix_fmt', 'yuv420p',
+            '-g', '60',
+            '-f', 'flv',
+            'rtmp://a.rtmp.youtube.com/live2/sj16-j2mx-gff2-t3d9-464e'  
+            # YouTube RTMP URL과 스트림 키 설정 (맨 뒤 슬래시 다음이 스트림 키)
+        ]
+        ffmpeg_process = subprocess.Popen(ffmpeg_command, stdin=subprocess.PIPE)
+        print('FFmpeg 프로세스 시작')
 
-    def __init__(self, track, transform):
+
+class MediaTransformTrack(MediaStreamTrack):
+    global model
+
+    def __init__(self, track, kind):
         super().__init__()
         self.track = track
-        self.transform = transform
+        self.kind = kind
+
+        # FFmpeg 프로세스 시작
+        start_ffmpeg_process()
 
     async def recv(self):
-        logging.info("비디오 변환 처리")
-        start_time = time.time()
         frame = await self.track.recv()
-        img = frame.to_ndarray(format="bgr24")
-        img = yolo.process_frame(img, model)
-        end_time = time.time()
-        print(f"YOLO 처리 시간: {end_time - start_time} 초")
         
-        new_frame = VideoFrame.from_ndarray(img, format="bgr24")
-        new_frame.pts = frame.pts
-        new_frame.time_base = frame.time_base
-        return new_frame
+        if self.kind == "video":
+            print("비디오 변환 처리")
+            img = frame.to_ndarray(format="bgr24")
+            img = yolo.process_frame(img, model)
 
-    
+            # FFmpeg로 비디오 프레임 전달
+            ffmpeg_process.stdin.write(img.tobytes())  # 전역 ffmpeg_process 사용
+
+            new_frame = VideoFrame.from_ndarray(img, format="bgr24")
+            new_frame.pts = frame.pts
+            new_frame.time_base = frame.time_base
+            return new_frame
+
+        elif self.kind == "audio":
+            print("오디오 처리 중")
+            audio_data = frame.to_ndarray()  # 오디오 데이터를 NumPy 배열로 변환
+            ffmpeg_process.stdin.write(audio_data.tobytes())  # 전역 ffmpeg_process 사용
+            return frame
+
+    def __del__(self):
+        # FFmpeg 프로세스 종료
+        global ffmpeg_process
+        if ffmpeg_process:
+            ffmpeg_process.stdin.close()
+            ffmpeg_process.wait()
+            ffmpeg_process = None
+
+
 @router.get("/", response_class=HTMLResponse)
 async def index():
     with open(os.path.join(ROOT, "..\\static\\index.html"), encoding='utf-8') as f:
@@ -65,8 +118,7 @@ async def offer(offer: RTCSessionDescription):
     logging.info("offer 요청 수신")
     pc = RTCPeerConnection()
     pcs.add(pc)
-    pcs[offer['client_id']]= pc
-
+    pcs[offer['client_id']] = pc
 
     @pc.on("icecandidate")
     async def on_icecandidate(event):
@@ -82,7 +134,6 @@ async def offer(offer: RTCSessionDescription):
         "sdp": pc.localDescription.sdp,
         "type": pc.localDescription.type
     }
-
 
 
 @router.websocket("/ws")
@@ -104,9 +155,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
     @pc.on("track")
     def on_track(track):
-        logging.info("비디오 수신")
+        logging.info(f"트랙 수신: {track.kind}")
         if track.kind == "video":
-            pc.addTrack(VideoTransformTrack(track, 'rotate'))
+            pc.addTrack(MediaTransformTrack(track, 'video'))
+        elif track.kind == "audio":
+            pc.addTrack(MediaTransformTrack(track, 'audio'))
 
     while True:
         try:
