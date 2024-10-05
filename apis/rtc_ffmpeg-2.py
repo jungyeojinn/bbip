@@ -136,7 +136,7 @@ class MediaTransformTrack(MediaStreamTrack):
             'ffmpeg', '-re',
             '-f', 'rawvideo',
             '-pixel_format', 'bgr24',
-            '-video_size', '640x480',  # 비디오 크기 설정
+            '-video_size', '480x640',  # 비디오 크기 설정
             '-r', '30',
             '-i', '-',  # stdin에서 입력받음
             '-f', 's16le',  # 오디오 입력 포맷을 설정
@@ -148,6 +148,7 @@ class MediaTransformTrack(MediaStreamTrack):
             '-c:a', 'aac',    # 오디오 코덱 설정
             '-b:a', '128k',   # 오디오 비트레이트
             '-preset', 'fast',
+            # '-fflags', '+nobuffer', # 이거 한 번 주석해제하고 해봐바!!
             # '-maxrate', '2000k',
             # '-bufsize', '4000k',
             '-pix_fmt', 'yuv420p',
