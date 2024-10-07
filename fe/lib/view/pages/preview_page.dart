@@ -24,12 +24,13 @@ class PreviewPage extends StatelessWidget {
                 final croppedFaceBytes = _faceController.croppedFaceBytes.value;
                 if (croppedFaceBytes != null) {
                   return Image.memory(croppedFaceBytes); // 잘라낸 얼굴 이미지 표시
-                } else {  
+                } else {
                   return const Text('이미지가 없습니다.');
                 }
               }),
-            ),  
+            ),
           ),
+          const SizedBox(height: 20), // 이미지와 버튼 사이에 여유 공간 추가
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -41,12 +42,14 @@ class PreviewPage extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () async {
-                  await onSave(_faceController.croppedFaceBytes.value); // 저장하기 버튼
+                  await onSave(
+                      _faceController.croppedFaceBytes.value); // 저장하기 버튼
                 },
                 child: const Text('저장하기'),
               ),
             ],
           ),
+          const SizedBox(height: 20), // 버튼과 하단의 여유 공간 추가
         ],
       ),
     );
