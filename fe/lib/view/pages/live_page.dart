@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:fe/view/components/common/camera_widget.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:convert';
+import 'dart:async';
+import 'package:get/get.dart' as gt;
 
 class LivePage extends StatefulWidget {
   const LivePage({super.key});
@@ -13,8 +18,152 @@ class _LivePageState extends State<LivePage> {
   Offset _imagePosition = Offset(215, 30); // 이미지의 초기 위치
   Offset _chatBoxPosition = Offset(100, 200); // 채팅 박스의 초기 위치
   Size _chatBoxSize = Size(200, 100); // 채팅 박스의 초기 크기
-  int cameraIndex = 0;
   bool isChatBoxVisible = false; // 채팅 박스의 가시성 상태
+
+  late WebSocketChannel channel;
+  final String socketUrl = 'ws://70.12.247.94:8000/rtc/ws';
+
+  RTCPeerConnection? peerConnection;
+  final Map<String, RTCPeerConnection> peerConnections = {};
+
+  final localVideoRenderer = RTCVideoRenderer();
+  final remoteVideoRenderer = RTCVideoRenderer();
+  MediaStream? localStream;
+  MediaStream? remoteStream;
+
+  bool isCameraReady = false;
+  bool showingLocalStream = true;
+  bool isUsingFrontCamera = true;
+
+  @override
+  void dispose() {
+    localVideoRenderer.dispose();
+    remoteVideoRenderer.dispose();
+    peerConnections.forEach((key, value) {
+      value.dispose();
+    });
+    channel.sink.close();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    localStream = gt.Get.arguments as MediaStream?;
+    localVideoRenderer.initialize().then((_) {
+      setState(() {
+        localVideoRenderer.srcObject = localStream;
+        isCameraReady = true;
+      });
+    });
+    remoteVideoRenderer.initialize();
+    _connectToWebSocket();
+    _requestPermissions();
+  }
+
+  Future<void> _requestPermissions() async {
+    print('_requestPermissions');
+    var status = await [Permission.camera, Permission.microphone].request();
+    if (status[Permission.camera]!.isGranted && status[Permission.microphone]!.isGranted) {
+      print('_startLocalStream1');
+      _startLocalStream();
+    } else {
+      print('Camera or Microphone permission denied.');
+    }
+  }
+
+  Future<void> _startLocalStream() async {
+    print('_startLocalStream2');
+    try {
+      final config = {
+        'sdpSemantics': 'unified-plan',
+      };
+      peerConnection = await createPeerConnection(config);
+
+      peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
+        final candidateData = {
+          'type': 'candidate',
+          'candidate': candidate.toMap(),
+        };
+        final jsonCandidate = jsonEncode(candidateData);
+        channel.sink.add(jsonCandidate);
+      };
+
+      peerConnection!.onTrack = (RTCTrackEvent event) {
+        setState(() {
+          remoteStream = event.streams[0];
+          remoteVideoRenderer.srcObject = remoteStream;
+        });
+      };
+
+      localStream?.getTracks().forEach((track) {
+        peerConnection!.addTrack(track, localStream!);
+      });
+
+      final offer = await peerConnection!.createOffer();
+      await peerConnection!.setLocalDescription(offer);
+
+      final offerData = {
+        'type': 'offer',
+        'sdp': offer.sdp,
+      };
+
+      channel.sink.add(jsonEncode(offerData));
+    } catch (e) {
+      print("Error accessing camera: $e");
+    }
+  }
+
+  void _connectToWebSocket () async {
+    print('_connectToWebSocket');
+    channel = IOWebSocketChannel.connect(socketUrl);
+    print('IOWebSocketChannel.connect');
+
+    channel.stream.listen((message) {
+      print('received message: $message');
+      final signal = jsonDecode(message!);
+      _handleSignal(signal);
+    }, onDone: () {
+      print('WebSocket connection closed.');
+    });
+  }
+
+  void _handleSignal(Map<String, dynamic> signal) {
+    switch (signal['type']) {
+      case 'answer':
+        print('received answer');
+        _handleAnswer(signal);
+        break;
+      case 'candidate':
+        print('received candidate');
+        _addCandidate(signal['candidate']);
+        break;
+      default:
+        print('Received unknown signal type: ${signal['type']}');
+        break;
+    }
+  }
+
+  void _handleAnswer(Map<String, dynamic> offer) async {
+    String? sdp = offer['sdp'];
+    String? type = offer['type'];
+
+    await peerConnection!.setRemoteDescription(RTCSessionDescription(sdp, type));
+    peerConnections['sender'] = peerConnection!;
+  }
+
+  void _addCandidate(Map<String, dynamic> candidate) async {
+    final pc = peerConnections['sender'];
+    if (pc != null) {
+      pc.addCandidate(RTCIceCandidate(
+        candidate['candidate'],
+        candidate['sdpMid'],
+        candidate['sdpMLineIndex'],
+      ));
+    } else {
+      print("Error: Peer connection is null for candidate: $candidate");
+    }
+  }
 
   void _updateImagePosition(Offset newPosition) {
     setState(() {
@@ -28,12 +177,6 @@ class _LivePageState extends State<LivePage> {
     });
   }
 
-  void toggleCamera() {
-    setState(() {
-      cameraIndex = (cameraIndex == 0) ? 1 : 0;
-    });
-  }
-
   void toggleChatBox() {
     setState(() {
       isChatBoxVisible = !isChatBoxVisible; // 채팅 박스의 가시성을 토글
@@ -42,17 +185,26 @@ class _LivePageState extends State<LivePage> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = 1 / (1.7777777777777777777777777777778 * MediaQuery.of(context).size.aspectRatio);
     return Scaffold(
       body: Stack(
         children: [
-          Positioned.fill(
-            child: CameraWidget(cameraIndex: cameraIndex),
+          Transform.scale(
+            scale: scale,
+            alignment: Alignment.center,
+            child: isCameraReady
+              ? (showingLocalStream
+                ? RTCVideoView(localVideoRenderer)
+                : (remoteStream != null
+                  ? RTCVideoView(remoteVideoRenderer)
+                  : Center(child: const CircularProgressIndicator()))
+            ) : Center(child: const CircularProgressIndicator()),
           ),
           Positioned(
             top: 16.0,
             left: 16.0,
             child: IconButton(
-              onPressed: toggleCamera,
+              onPressed: () {},
               icon: Image.asset(
                 'assets/rotate-button.png',
                 width: 32.0,
@@ -189,18 +341,32 @@ class _LivePageState extends State<LivePage> {
             right: 0,
             child: Center(
               child: ElevatedButton(
-                onPressed: () {
-                  Get.toNamed('/live');
-                },
+                onPressed: () { gt.Get.back(); },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 24.0, vertical: 12.0),
                   textStyle: const TextStyle(fontSize: 20.0),
                 ),
-                child: const Text('Go Live'),
+                child: const Text('Stop Live'),
               ),
             ),
           ),
+          Positioned(
+            bottom: 40,
+            right: 40,
+            child: IconButton(
+              icon: Icon(
+                showingLocalStream ? Icons.blur_on : Icons.blur_off,
+                color: Colors.white,
+                size: 55,
+              ),
+              onPressed: () {
+                setState(() {
+                  showingLocalStream = !showingLocalStream;
+                });
+              },
+            )
+          )
         ],
       ),
     );
