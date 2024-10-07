@@ -5,6 +5,7 @@ import 'dart:typed_data'; // Uint8List 사용을 위해 import
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart' as dio;
 
@@ -23,6 +24,8 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
   final FaceController _faceController = Get.put(FaceController());
+  // SecureStorage 객체 생성
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -119,6 +122,11 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     return byteData!.buffer.asUint8List();
   }
 
+  // accessToken을 가져오는 메서드
+  Future<String?> _getAccessToken() async {
+    return await _secureStorage.read(key: 'accessToken');
+  }
+
   Future<void> _sendFaceToSpringBoot(Uint8List? croppedFaceBytes) async {
     if (croppedFaceBytes == null) {
       print('전송할 이미지가 없습니다.');
@@ -128,6 +136,9 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     try {
       // Dio 객체 생성
       dio.Dio dioClient = dio.Dio();
+
+      // SecureStorage에서 accessToken 가져오기
+      String? accessToken = await _getAccessToken();
 
       // 이미지 파일을 dio의 MultipartFile로 변환
       dio.MultipartFile imageFile = dio.MultipartFile.fromBytes(
@@ -140,18 +151,19 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
         'image': imageFile,
       });
 
-      // 서버로 POST 요청 보내기
+      // 요청 헤더에 accessToken 추가
       dio.Response response = await dioClient.post(
-        'http://your-spring-boot-server-url/upload', // 서버의 엔드포인트로 변경
+        'https://j11a203.p.ssafy.io:8080/api/faces', // 서버의 엔드포인트로 변경
         data: formData,
+        options: dio.Options(
+          headers: {
+            'Authorization': 'Bearer $accessToken', // Authorization 헤더 추가
+          },
+        ),
       );
 
-      // 응답 처리
-      if (response.statusCode == 200) {
-        print('이미지 업로드 성공: ${response.data}');
-      } else {
-        print('이미지 업로드 실패: ${response.statusCode}');
-      }
+      print(response.statusCode);
+      Get.offNamed('/main');
     } catch (e) {
       print('에러 발생: $e');
     }
@@ -159,19 +171,28 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = 1 / (1.7778 * MediaQuery.of(context).size.aspectRatio);
+
     return Scaffold(
       body: Stack(
         children: [
-          FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_cameraController);
-              } else {
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
+          // Transform.scale을 이용해 화면에 꽉 차는 카메라 프리뷰
+          Transform.scale(
+            scale: scale,
+            child: Center(
+              child: FutureBuilder<void>(
+                future: _initializeControllerFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return CameraPreview(_cameraController);
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
+              ),
+            ),
           ),
+          // 촬영하기 버튼 - 화면 중앙에 위치
           Positioned(
             bottom: 100,
             left: 0,
@@ -183,6 +204,8 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
               ),
             ),
           ),
+
+          // 건너뛰기 버튼 - 화면 하단 오른쪽에 위치
           Positioned(
             bottom: 50,
             right: 20,

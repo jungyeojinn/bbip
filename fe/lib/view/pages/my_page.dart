@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:dio/dio.dart';
 
 class MyPage extends StatelessWidget {
   const MyPage({super.key});
@@ -58,7 +60,6 @@ class MyPage extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(width: 4),
-                // i 버튼 추가 (Tooltip 사용)
                 Tooltip(
                   message: '송출하고 싶은 플랫폼의 RTMP KEY를 입력해서 송출을 할 수 있습니다.',
                   child: Icon(
@@ -72,15 +73,14 @@ class MyPage extends StatelessWidget {
             const SizedBox(height: 12),
             // Dotted Border Button
             DottedBorder(
-              color: Colors.blueAccent, // 테두리 색상을 파란색으로 변경
-              strokeWidth: 2, // 테두리 두께
-              dashPattern: const [8, 4], // 대시 패턴 설정
-              borderType: BorderType.RRect, // 둥근 모서리
-              radius: const Radius.circular(12), // 둥글게 할 반경 설정
+              color: Colors.blueAccent,
+              strokeWidth: 2,
+              dashPattern: const [8, 4],
+              borderType: BorderType.RRect,
+              radius: const Radius.circular(12),
               child: GestureDetector(
                 onTap: () {
-                  showPlatformDialog(
-                      context); // 플랫폼 추가 버튼 클릭 시 fullscreen dialog 호출
+                  showPlatformDialog(context);
                 },
                 child: Container(
                   width: double.infinity,
@@ -99,7 +99,6 @@ class MyPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            // 얼굴 추가 섹션
             Row(
               children: const [
                 Text(
@@ -107,7 +106,6 @@ class MyPage extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(width: 4),
-                // i 버튼 추가 (Tooltip 사용)
                 Tooltip(
                   message: '송출 화면에 Blur 표시가 안되게 할 인물들을 추가할 수 있습니다',
                   child: Icon(
@@ -120,11 +118,11 @@ class MyPage extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             DottedBorder(
-              color: Colors.blueAccent, // 테두리 색상을 파란색으로 변경
-              strokeWidth: 2, // 테두리 두께
-              dashPattern: const [8, 4], // 대시 패턴 설정
-              borderType: BorderType.RRect, // 둥근 모서리
-              radius: const Radius.circular(12), // 둥글게 할 반경 설정
+              color: Colors.blueAccent,
+              strokeWidth: 2,
+              dashPattern: const [8, 4],
+              borderType: BorderType.RRect,
+              radius: const Radius.circular(12),
               child: GestureDetector(
                 onTap: () {},
                 child: Container(
@@ -143,9 +141,7 @@ class MyPage extends StatelessWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-            // 사용자 프로필 이미지 리스트
             const Text(
               '얼굴 목록',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -158,7 +154,6 @@ class MyPage extends StatelessWidget {
     );
   }
 
-  // 프로필 이미지와 이메일을 포함한 행을 생성하는 함수
   Widget _buildProfileRow(String email) {
     return Column(
       children: [
@@ -180,7 +175,6 @@ class MyPage extends StatelessWidget {
     );
   }
 
-  // Fullscreen dialog 표시하는 함수
   void showPlatformDialog(BuildContext context) {
     showGeneralDialog(
       context: context,
@@ -194,7 +188,7 @@ class MyPage extends StatelessWidget {
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: GridView.count(
-              crossAxisCount: 3, // 3x3 형태로 버튼 배치
+              crossAxisCount: 3,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
               children: [
@@ -221,7 +215,6 @@ class MyPage extends StatelessWidget {
     );
   }
 
-  // 플랫폼 버튼을 생성하는 함수
   Widget _buildPlatformButton(
       BuildContext context, String platformName, String? assetPath,
       {String? text}) {
@@ -231,7 +224,7 @@ class MyPage extends StatelessWidget {
       },
       style: ElevatedButton.styleFrom(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12), // 둥근 모서리 설정
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
       child: assetPath != null
@@ -247,27 +240,25 @@ class MyPage extends StatelessWidget {
     );
   }
 
-  // 하단에서 작은 다이얼로그 표시하는 함수
   void showBottomSheetDialog(BuildContext context, String platformName) {
+    TextEditingController streamKeyController = TextEditingController();
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // 다이얼로그 크기를 전체 화면에 맞추도록 설정
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(16), // 상단만 둥글게
+          top: Radius.circular(16),
         ),
       ),
       builder: (context) {
         return Padding(
-          padding: MediaQuery.of(context).viewInsets, // 키보드가 올라올 때 화면에 맞게 패딩 조절
+          padding: MediaQuery.of(context).viewInsets,
           child: Wrap(
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                width: MediaQuery.of(context).size.width, // 너비를 화면 전체로 설정
                 child: Column(
-                  mainAxisSize: MainAxisSize.min, // 다이얼로그 크기를 내용에 맞게 조절
-                  crossAxisAlignment: CrossAxisAlignment.center, // 가운데 정렬
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       '$platformName RTMP 설정',
@@ -280,28 +271,14 @@ class MyPage extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        '$platformName 스트림 URL 입력',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const TextField(
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: '스트림 URL을 입력하세요',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
                         '$platformName 스트림 Key 입력',
                         style: const TextStyle(fontSize: 16),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const TextField(
-                      decoration: InputDecoration(
+                    TextField(
+                      controller: streamKeyController,
+                      decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '스트림 Key를 입력하세요',
                       ),
@@ -311,13 +288,20 @@ class MyPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            int? serverId = getServerId(platformName);
+                            if (serverId != null) {
+                              await sendStreamKey(
+                                  serverId, streamKeyController.text);
+                              Navigator.of(context).pop();
+                            }
+                          },
                           child: const Text('등록'),
                         ),
                         const SizedBox(width: 20),
                         ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).pop(); // 다이얼로그 닫기
+                            Navigator.of(context).pop();
                           },
                           child: const Text('취소'),
                         ),
@@ -331,5 +315,53 @@ class MyPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  int? getServerId(String platformName) {
+    Map<String, int> platformMap = {
+      'youtube': 1,
+      'twitch': 2,
+      'afreeca_tv': 3,
+      'chzzk': 4,
+      'periscope': 5,
+      'facebook': 6,
+      'd_live': 7,
+      'trovo': 8,
+      'custom': 9,
+    };
+    return platformMap[platformName];
+  }
+
+  Future<void> sendStreamKey(int serverId, String streamKey) async {
+    try {
+      Dio dio = Dio();
+      String apiUrl = 'https://j11a203.p.ssafy.io:8080/api/rtmp/key';
+      final storage = FlutterSecureStorage();
+
+      // SecureStorage에서 accessToken 가져오기
+      String? accessToken = await storage.read(key: 'accessToken');
+      print(accessToken);
+
+      // accessToken이 있는 경우 헤더에 추가
+      dio.options.headers['Authorization'] = 'Bearer $accessToken';
+
+      // POST 요청 보내기
+      Response response = await dio.post(
+        apiUrl,
+        data: {
+          'serverId': serverId,
+          'key': streamKey,
+        },
+        options: Options(
+          validateStatus: (status) {
+            return status != null && status < 500; // 500 미만 상태 허용
+          },
+        ),
+      );
+
+      print('응답: ${response.data}');
+    } catch (e) {
+      print('오류 발생: $e');
+    }
   }
 }
