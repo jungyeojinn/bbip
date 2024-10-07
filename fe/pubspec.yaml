@@ -1,0 +1,41 @@
+name: fe
+description: "A new Flutter project."
+publish_to: "none"
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  get:
+  permission_handler:
+  camera:
+  path_provider:
+  image_picker:
+  carousel_slider:
+  dotted_border:
+  google_mlkit_face_detection:
+  dio:
+  flutter_secure_storage:
+  flutter_web_auth:
+  uni_links:
+
+  flutter_webrtc:
+  web_socket_channel:
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  assets:
+    - assets/
+
+  uses-material-design: true
