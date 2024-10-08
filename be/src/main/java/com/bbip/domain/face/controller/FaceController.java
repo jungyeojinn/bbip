@@ -26,9 +26,9 @@ public class FaceController {
             summary = "얼굴 등록",
             description = "객체속성은 \"selt\"만 설정 필요. 본인인지(true) 아닌지(false)"
     )
-    @PostMapping(value = "", consumes = "multipart/form-data")
+    @PostMapping(consumes = "multipart/form-data")
     public SingleResponse<FaceDto> saveFace(
-            @RequestAttribute(value = "AccessToken", required = true) String accessToken,
+            @RequestHeader(value = "Authorization", required = true) String accessToken,
             @RequestPart("face") FaceDto face,
             @RequestPart("image") MultipartFile image) throws IOException
     {
@@ -42,7 +42,7 @@ public class FaceController {
     )
     @GetMapping(value = "/self")
     public SingleResponse<FaceDto> findMyFaces(
-            @RequestAttribute(value = "AccessToken", required = true) String accessToken)
+            @RequestHeader(value = "Authorization", required = true) String accessToken)
     {
         FaceDto selfie = faceService.findMyFace(accessToken);
 
@@ -54,7 +54,7 @@ public class FaceController {
     )
     @GetMapping
     public ListResponse<FaceDto> getAllFaces(
-            @RequestAttribute(value = "AccessToken", required = true) String accessToken)
+            @RequestHeader(value = "Authorization", required = true) String accessToken)
     {
         List<FaceDto> faces = faceService.findAllFaces(accessToken);
 
@@ -67,7 +67,7 @@ public class FaceController {
     )
     @DeleteMapping(value = "/{id}")
     public CommonResponse deleteFace(
-            @RequestAttribute(value = "AccessToken", required = true) String accessToken,
+            @RequestHeader(value = "Authorization", required = true) String accessToken,
             @PathVariable("id") Integer id)
     {
         faceService.removeFace(id);

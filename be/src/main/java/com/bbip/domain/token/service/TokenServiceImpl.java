@@ -49,8 +49,6 @@ public class TokenServiceImpl implements TokenService {
      */
     @Override
     public void validateRefreshToken(String email, String refreshToken) {
-        log.info("레디스에서 조회된 리프레시토큰: "+redisUtil.getData(email));
-        log.info("입력된 리프레시 토큰: "+ refreshToken);
         String storedToken = redisUtil.getData(email);
         if (storedToken == null || !storedToken.equals(refreshToken))
             throw new InvalidTokenException("[엑세스토큰 발급 실패]일치하는 리프레시 토큰이 없음");
