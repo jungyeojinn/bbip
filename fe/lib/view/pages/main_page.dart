@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:get/get.dart' as gt;
-import 'dart:convert';
 import 'dart:async';
 
 import 'package:fe/view/components/main_page/camera_menu_widget.dart';

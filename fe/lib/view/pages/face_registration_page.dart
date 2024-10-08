@@ -171,7 +171,7 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1 / (1.7778 * MediaQuery.of(context).size.aspectRatio);
+    final scale = 1 / (1.5 * MediaQuery.of(context).size.aspectRatio);
 
     return Scaffold(
       body: Stack(
@@ -192,6 +192,37 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
               ),
             ),
           ),
+
+          // 얼굴 맞추기 안내 틀
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 안내 문구
+                const Text(
+                  '얼굴을 맞춰주세요',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    backgroundColor: Colors.black54,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // 얼굴을 맞추기 위한 사각형 틀
+                Container(
+                  width: 250, // 원하는 틀의 너비
+                  height: 350, // 원하는 틀의 높이
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white, width: 2),
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.transparent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           // 촬영하기 버튼 - 화면 중앙에 위치
           Positioned(
             bottom: 100,
@@ -211,7 +242,7 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
             right: 20,
             child: GestureDetector(
               onTap: () {
-                Get.toNamed('/main');
+                Get.offNamed('/main');
               },
               child: const Text(
                 '건너뛰기 ->',
