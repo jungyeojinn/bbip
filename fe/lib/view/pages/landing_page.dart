@@ -31,9 +31,8 @@ class _LandingPageState extends State<LandingPage> {
         final accessToken = uri.queryParameters['accessToken'];
         final refreshToken = uri.queryParameters['refreshToken'];
 
-        print(accessToken);
-        print(refreshToken);
-
+        print('accessToken: $accessToken');
+        print('refreshToken: $refreshToken');
         if (accessToken != null && refreshToken != null) {
           // Secure Storage에 토큰 저장
           storage.write(key: 'accessToken', value: accessToken);

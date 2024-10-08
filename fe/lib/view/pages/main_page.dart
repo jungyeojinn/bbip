@@ -91,8 +91,8 @@ class _MainPageState extends State<MainPage> {
               : Center(child: const CircularProgressIndicator()),
           ),
           Positioned(
-            top: 16.0,
-            left: 16.0,
+            top: 30.0,
+            left: 20.0,
             child: IconButton(
               onPressed: () async {
                 setState(() {
@@ -109,8 +109,8 @@ class _MainPageState extends State<MainPage> {
           ),
           if (!isVideoRecording)
             Positioned(
-              top: 16.0,
-              right: 16.0,
+              top: 30.0,
+              right: 20.0,
               child: IconButton(
                 onPressed: () {
                   gt.Get.toNamed('/my');
