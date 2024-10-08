@@ -33,6 +33,7 @@ class _LandingPageState extends State<LandingPage> {
 
         print('accessToken: $accessToken');
         print('refreshToken: $refreshToken');
+        print('uri: $uri');
         if (accessToken != null && refreshToken != null) {
           // Secure Storage에 토큰 저장
           storage.write(key: 'accessToken', value: accessToken);

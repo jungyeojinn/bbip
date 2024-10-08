@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:typed_data'; // Uint8List 사용을 위해 import
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,7 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart' as dio;
+import 'package:http_parser/http_parser.dart';
 
 import 'package:fe/controller/face_controller.dart';
 import 'package:fe/view/pages/preview_page.dart';
@@ -40,8 +42,8 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
 
   @override
   void dispose() {
-    _faceDetector.close();
     _cameraController.dispose();
+    _faceDetector.close();
     super.dispose();
   }
 
@@ -134,36 +136,41 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     }
 
     try {
-      // Dio 객체 생성
       dio.Dio dioClient = dio.Dio();
+      Map<String, bool> face = {'self': true};
+      String jsonString = jsonEncode(face);
 
-      // SecureStorage에서 accessToken 가져오기
       String? accessToken = await _getAccessToken();
-
-      // 이미지 파일을 dio의 MultipartFile로 변환
       dio.MultipartFile imageFile = dio.MultipartFile.fromBytes(
         croppedFaceBytes,
         filename: 'cropped_face.png',
+        contentType: MediaType('image', 'png'),
       );
+      print(imageFile);
 
       // FormData 생성
       dio.FormData formData = dio.FormData.fromMap({
         'image': imageFile,
+        'face': dio.MultipartFile.fromString(
+          jsonString,
+          contentType: MediaType('application', 'json'), // JSON 타입으로 설정
+        ),
       });
 
       // 요청 헤더에 accessToken 추가
       dio.Response response = await dioClient.post(
-        'https://j11a203.p.ssafy.io:8080/api/faces', // 서버의 엔드포인트로 변경
+        'http://j11a203.p.ssafy.io:8080/api/faces', // 서버의 엔드포인트로 변경
         data: formData,
         options: dio.Options(
           headers: {
-            'Authorization': 'Bearer $accessToken', // Authorization 헤더 추가
+            'Authorization': '$accessToken',
           },
         ),
       );
 
-      print(response.statusCode);
+      await _cameraController.dispose();
       Get.offNamed('/main');
+      print(response.statusCode);
     } catch (e) {
       print('에러 발생: $e');
     }
@@ -171,27 +178,32 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = _cameraController.value.previewSize;
-    final aspectRatio = size!.width / size.height;
-    final scale = 1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
     return Scaffold(
       body: Stack(
         children: [
           // Transform.scale을 이용해 화면에 꽉 차는 카메라 프리뷰
-          Transform.scale(
-            scale: scale,
-            child: Center(
-              child: FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return CameraPreview(_cameraController);
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                },
-              ),
-            ),
+          FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                final size = _cameraController.value.previewSize;
+                final aspectRatio = size!.width / size.height;
+                final scale =
+                    1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()..scale(-1.0, 1.0), // 좌우 반전
+                  child: Transform.scale(
+                    scale: scale,
+                    child: Center(
+                      child: CameraPreview(_cameraController),
+                    ),
+                  ),
+                );
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
           ),
 
           // 얼굴 맞추기 안내 틀
@@ -199,7 +211,6 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 안내 문구
                 const Text(
                   '얼굴을 맞춰주세요',
                   style: TextStyle(
@@ -210,7 +221,6 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // 얼굴을 맞추기 위한 사각형 틀
                 Container(
                   width: 250, // 원하는 틀의 너비
                   height: 350, // 원하는 틀의 높이
