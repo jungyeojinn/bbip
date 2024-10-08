@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:get/get.dart' as gt;
-import 'dart:convert';
 import 'dart:async';
 
 import 'package:fe/view/components/main_page/camera_menu_widget.dart';
@@ -94,8 +91,8 @@ class _MainPageState extends State<MainPage> {
               : Center(child: const CircularProgressIndicator()),
           ),
           Positioned(
-            top: 16.0,
-            left: 16.0,
+            top: 30.0,
+            left: 20.0,
             child: IconButton(
               onPressed: () async {
                 setState(() {
@@ -112,8 +109,8 @@ class _MainPageState extends State<MainPage> {
           ),
           if (!isVideoRecording)
             Positioned(
-              top: 16.0,
-              right: 16.0,
+              top: 30.0,
+              right: 20.0,
               child: IconButton(
                 onPressed: () {
                   gt.Get.toNamed('/my');

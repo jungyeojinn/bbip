@@ -200,21 +200,21 @@ class _LivePageState extends State<LivePage> {
                   : Center(child: const CircularProgressIndicator()))
             ) : Center(child: const CircularProgressIndicator()),
           ),
+          // Positioned(
+          //   top: 30.0,
+          //   left: 20.0,
+          //   child: IconButton(
+          //     onPressed: () {},
+          //     icon: Image.asset(
+          //       'assets/rotate-button.png',
+          //       width: 32.0,
+          //       height: 32.0,
+          //     ),
+          //   ),
+          // ),
           Positioned(
-            top: 16.0,
-            left: 16.0,
-            child: IconButton(
-              onPressed: () {},
-              icon: Image.asset(
-                'assets/rotate-button.png',
-                width: 32.0,
-                height: 32.0,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 16.0,
-            right: 16.0,
+            top: 30.0,
+            right: 20.0,
             child: IconButton(
               onPressed: toggleChatBox,
               icon: Image.asset(

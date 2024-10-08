@@ -31,8 +31,8 @@ class _LandingPageState extends State<LandingPage> {
         final accessToken = uri.queryParameters['accessToken'];
         final refreshToken = uri.queryParameters['refreshToken'];
 
-        print(accessToken);
-        print(refreshToken);
+        print('accessToken: $accessToken');
+        print('refreshToken: $refreshToken');
         if (accessToken != null && refreshToken != null) {
           // Secure Storage에 토큰 저장
           storage.write(key: 'accessToken', value: accessToken);
@@ -128,7 +128,7 @@ class _LandingPageState extends State<LandingPage> {
 
     try {
       // Web Auth 플로우를 사용하여 Google 로그인 페이지로 리디렉션
-      final result = await FlutterWebAuth.authenticate(
+      await FlutterWebAuth.authenticate(
         url: 'http://j11a203.p.ssafy.io:8080/oauth2/authorization/google',
         callbackUrlScheme: 'bbip', // 이 스키마는 콜백 URL을 설정할 때 필요
       );

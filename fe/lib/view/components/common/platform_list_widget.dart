@@ -1,119 +1,90 @@
+import 'package:dio/dio.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:dio/dio.dart';
 
-import 'package:fe/view/components/common/platform_list_widget.dart';
+class PlatformListWidget extends StatefulWidget {
 
-class MyPage extends StatefulWidget {
-  const MyPage({super.key});
+  const PlatformListWidget({
+    super.key,
+  });
 
   @override
-  State<MyPage> createState() => _MyPageState();
+  State<PlatformListWidget> createState() => _PlatformListWidgetState();
 }
 
-class _MyPageState extends State<MyPage> {
+class _PlatformListWidgetState extends State<PlatformListWidget> {
+  bool isRegistered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('MyPage'),
-      ),
-      body: Container(
-        color: Colors.white, // 배경색 흰색으로 설정
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      children: [
+        if (isRegistered == false)
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              isRegistered = !isRegistered;
+            });
+            showPlatformDialog(context);
+          },
+          child: DottedBorder(
+            color: Colors.blueAccent,
+            strokeWidth: 2,
+            dashPattern: const [8, 4],
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(12),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: const Center(
+                child: Text(
+                  '플랫폼 추가 +',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (isRegistered == true)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // 프로필 섹션
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: const [
-                // 동그란 사진
-                CircleAvatar(
-                  radius: 40, // 이미지 크기를 좀 더 키움
-                  backgroundImage: AssetImage('assets/jangwoo.png'),
-                ),
-                SizedBox(width: 20),
-                // 이메일 및 사용자 정보 텍스트
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Jangwoo Lee',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'xxx@gmail.com',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            SizedBox(width: 10,),
+            SizedBox(
+              height: 80,
+              width: 80,
+              child: _buildPlatformButton(
+                context, 'youtube', 'assets/youtube-icon.png',
+              ),
             ),
-            const SizedBox(height: 24),
-            // 플랫폼 추가 섹션
-            Row(
-              children: const [
-                Text(
-                  '플랫폼 추가',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 4),
-                Tooltip(
-                  message: '송출하고 싶은 플랫폼의 RTMP KEY를 입력해서 송출을 할 수 있습니다.',
-                  child: Icon(
-                    Icons.info_outline,
-                    color: Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-            PlatformListWidget(),
-            const SizedBox(height: 24),
-            Row(
-              children: const [
-                Text(
-                  '얼굴 추가',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 4),
-                Tooltip(
-                  message: '송출 화면에 Blur 표시가 안되게 할 인물들을 추가할 수 있습니다',
-                  child: Icon(
-                    Icons.info_outline,
-                    color: Colors.black,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            DottedBorder(
-              color: Colors.blueAccent,
-              strokeWidth: 2,
-              dashPattern: const [8, 4],
-              borderType: BorderType.RRect,
-              radius: const Radius.circular(12),
-              child: GestureDetector(
-                onTap: () {},
+            SizedBox(width: 10,),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  isRegistered = !isRegistered;
+                });
+                showPlatformDialog(context);
+              },
+              child: DottedBorder(
+                color: Colors.blueAccent,
+                strokeWidth: 2,
+                dashPattern: const [8, 4],
+                borderType: BorderType.RRect,
+                radius: const Radius.circular(12),
                 child: Container(
-                  width: double.infinity,
+                  height: 80,
+                  width: 80,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: const Center(
                     child: Text(
-                      '얼굴 추가 +',
+                      '+',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold,
                         color: Colors.blueAccent,
                       ),
@@ -122,36 +93,10 @@ class _MyPageState extends State<MyPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
-              '얼굴 목록',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            ...List.generate(3, (index) => _buildProfileRow('xxx@gmail.com')),
+            SizedBox(width: 90,),
+            SizedBox(width: 100,),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProfileRow(String email) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            const CircleAvatar(
-              radius: 24,
-              backgroundImage: AssetImage('assets/jangwoo.png'),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              email,
-              style: const TextStyle(fontSize: 16, color: Colors.black),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
       ],
     );
   }
@@ -210,14 +155,14 @@ class _MyPageState extends State<MyPage> {
       ),
       child: assetPath != null
           ? Image.asset(
-              assetPath,
-              width: 50,
-              height: 50,
-            )
+        assetPath,
+        width: 50,
+        height: 50,
+      )
           : Text(
-              text!,
-              style: const TextStyle(fontSize: 16),
-            ),
+        text!,
+        style: const TextStyle(fontSize: 16),
+      ),
     );
   }
 
