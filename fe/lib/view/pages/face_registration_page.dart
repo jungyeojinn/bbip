@@ -171,8 +171,9 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1 / (1.7778 * MediaQuery.of(context).size.aspectRatio);
-
+    final size = _cameraController.value.previewSize;
+    final aspectRatio = size!.width / size.height;
+    final scale = 1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
     return Scaffold(
       body: Stack(
         children: [
@@ -211,7 +212,7 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
             right: 20,
             child: GestureDetector(
               onTap: () {
-                Get.toNamed('/main');
+                Get.offNamed('/main');
               },
               child: const Text(
                 '건너뛰기 ->',
