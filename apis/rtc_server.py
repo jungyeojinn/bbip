@@ -17,6 +17,8 @@ from aiortc.contrib.media import MediaPlayer, MediaRelay
 from av import VideoFrame
 from fastapi import APIRouter
 from utils import face_blur_yolo as yolo
+from ultralytics import YOLO
+
 
 router = APIRouter()
 
@@ -26,7 +28,7 @@ ROOT = os.path.dirname(__file__)
 logger = logging.getLogger("pc")
 pcs = set()
 relay = MediaRelay()
-model = yolo.load_model()
+model = YOLO('../model/facedetection_yolo.pt')
 
 class VideoTransformTrack(MediaStreamTrack):
     kind = "video"
@@ -71,8 +73,8 @@ async def offer(offer: RTCSessionDescription):
     @pc.on("icecandidate")
     async def on_icecandidate(event):
         if event.candidate:
-            # Send the ICE candidate to the client (using WebSocket or HTTP)
-            pass
+            await WebSocket.send_text(json.dumps({"candidate": event.candidate.to_json()}))
+            print("send on_icecandidate")
 
     await pc.setRemoteDescription(offer)
     answer = await pc.createAnswer()
@@ -96,10 +98,11 @@ async def websocket_endpoint(websocket: WebSocket):
     pc = RTCPeerConnection()
     pcs.add(pc)
 
-    @pc.on("icecandidate")
+    @pc.on("candidate")
     async def on_icecandidate(event):
         logging.info("candidate")
         if event.candidate:
+            print("send on_icecandidate")
             await websocket.send_text(json.dumps({"candidate": event.candidate.to_json()}))
 
     @pc.on("track")

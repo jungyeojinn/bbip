@@ -7,7 +7,7 @@ CONFIDENCE_THRESHOLD = 0.6
 GREEN = (0, 255, 0)
 WHITE = (255, 255, 255)
 
-def load_model(model_path='../model/facedetection_yolo.pt'):
+def load_model(model_path='../model/face_detection_yolo.pt'):
     """
     YOLO 모델을 로드하는 함수.
     
