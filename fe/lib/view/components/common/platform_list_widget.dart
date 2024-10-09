@@ -261,15 +261,17 @@ class _PlatformListWidgetState extends State<PlatformListWidget> {
   Future<void> sendStreamKey(int serverId, String streamKey) async {
     try {
       Dio dio = Dio();
-      String apiUrl = 'https://j11a203.p.ssafy.io:8080/api/rtmp/key';
+      String apiUrl = 'http://j11a203.p.ssafy.io:8080/api/rtmps';
       final storage = FlutterSecureStorage();
 
       // SecureStorage에서 accessToken 가져오기
       String? accessToken = await storage.read(key: 'accessToken');
       print(accessToken);
+      print(serverId);
+      print(streamKey);
 
       // accessToken이 있는 경우 헤더에 추가
-      dio.options.headers['Authorization'] = 'Bearer $accessToken';
+      dio.options.headers['Authorization'] = '$accessToken';
 
       // POST 요청 보내기
       Response response = await dio.post(
@@ -278,13 +280,8 @@ class _PlatformListWidgetState extends State<PlatformListWidget> {
           'serverId': serverId,
           'key': streamKey,
         },
-        options: Options(
-          validateStatus: (status) {
-            return status != null && status < 500; // 500 미만 상태 허용
-          },
-        ),
       );
-
+      print(response.statusCode);
       print('응답: ${response.data}');
     } catch (e) {
       print('오류 발생: $e');
