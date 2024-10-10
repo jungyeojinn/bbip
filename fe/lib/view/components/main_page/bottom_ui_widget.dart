@@ -3,13 +3,13 @@ import 'package:get/get.dart';
 import 'animated_button.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fe/view/components/main_page/gallery_icon_widget.dart';
-import 'package:fe/view/components/common/platform_list_widget.dart';
+import 'category_selection_widget.dart';
 
-class BottomUiWidget extends StatelessWidget {
+class BottomUiWidget extends StatefulWidget {
   final String selectedMode;
   final bool isVideoRecording;
   final VoidCallback onRecordPressed;
-  final VoidCallback onGoLivePressed;
+  final Function(String) onGoLivePressed;
 
   const BottomUiWidget({
     super.key,
@@ -18,6 +18,13 @@ class BottomUiWidget extends StatelessWidget {
     required this.onRecordPressed,
     required this.onGoLivePressed,
   });
+
+  @override
+  State<BottomUiWidget> createState() => BottomUiWidgetState();
+}
+
+class BottomUiWidgetState extends State<BottomUiWidget> {
+  late String blurMode = '얼굴';
 
   void _showPopup() {
     Get.dialog(
@@ -42,7 +49,7 @@ class BottomUiWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        SizedBox(width: 10,),
+                        SizedBox(width: 10),
                         SizedBox(
                           height: 80,
                           width: 80,
@@ -57,10 +64,10 @@ class BottomUiWidget extends StatelessWidget {
                               'assets/youtube-icon.png',
                               width: 50,
                               height: 50,
-                            )
+                            ),
                           ),
                         ),
-                        SizedBox(width: 10,),
+                        SizedBox(width: 10),
                         GestureDetector(
                           onTap: () {},
                           child: DottedBorder(
@@ -89,43 +96,22 @@ class BottomUiWidget extends StatelessWidget {
                       ],
                     ),
                     SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      // mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        SizedBox(width: 16),
-                        Text(
-                          '얼굴',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.lightBlueAccent,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Text(
-                          '상표',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                          ),
-                        ),
-                        SizedBox(width: 16),
-                        Text(
-                          '흉기',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
+                    CategorySelectionWidget(
+                      blurMode: blurMode,
+                      onBlurModeChanged: (label) {
+                        setState(() {
+                          blurMode = label;
+                          print('onBlurModeChanged: blurMode=$blurMode');
+                        });
+                      },
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween, // 버튼들을 좌우로 배치
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         TextButton(
                           onPressed: () {
                             Get.back();
-                            onGoLivePressed();
+                            widget.onGoLivePressed(blurMode);
                           },
                           child: Text(
                             '시작',
@@ -160,14 +146,14 @@ class BottomUiWidget extends StatelessWidget {
         Center(
           child: _buildModeSpecificUI(),
         ),
-        if (!isVideoRecording && selectedMode == 'Video' || selectedMode == 'Photo')
+        if (!widget.isVideoRecording && widget.selectedMode == 'Video' || widget.selectedMode == 'Photo')
           GalleryIconWidget()
       ],
     );
   }
 
   Widget _buildModeSpecificUI() {
-    switch (selectedMode) {
+    switch (widget.selectedMode) {
       case 'Live':
         return ElevatedButton(
           onPressed: () => _showPopup(),
@@ -179,8 +165,8 @@ class BottomUiWidget extends StatelessWidget {
         );
       case 'Video':
         return AnimatedRecordButton(
-          isVideoRecording: isVideoRecording,
-          onPressed: onRecordPressed,
+          isVideoRecording: widget.isVideoRecording,
+          onPressed: widget.onRecordPressed,
         );
       case 'Photo':
         return IconButton(

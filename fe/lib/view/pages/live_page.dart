@@ -21,7 +21,7 @@ class _LivePageState extends State<LivePage> {
   bool isChatBoxVisible = false; // 채팅 박스의 가시성 상태
 
   late WebSocketChannel channel;
-  final String socketUrl = 'ws://172.30.1.38:8000/rtc/ws';
+  late final String socketUrl;
 
   RTCPeerConnection? peerConnection;
   final Map<String, RTCPeerConnection> peerConnections = {};
@@ -31,10 +31,11 @@ class _LivePageState extends State<LivePage> {
   MediaStream? localStream;
   MediaStream? remoteStream;
   late double scale;
+  late String blurMode;
 
   bool isCameraReady = false;
   bool showingLocalStream = false;
-  bool isUsingFrontCamera = true;
+  late bool isUsingFrontCamera;
 
   @override
   void dispose() {
@@ -50,7 +51,11 @@ class _LivePageState extends State<LivePage> {
   @override
   void initState() {
     super.initState();
-    localStream = gt.Get.arguments as MediaStream?;
+    final arguments = gt.Get.arguments as Map;
+    localStream = arguments['localStream'];
+    isUsingFrontCamera = arguments['isUsingFrontCamera'];
+    blurMode = arguments['blurMode'];
+    socketUrl = 'ws://70.12.247.94:8000/$blurMode/ws/';
     final settings = localStream?.getVideoTracks()[0].getSettings();
     final double aspectRatio = settings?['width'] / settings?['height'];
     localVideoRenderer.initialize().then((_) {
@@ -152,9 +157,9 @@ class _LivePageState extends State<LivePage> {
     }
   }
 
-  void _handleAnswer(Map<String, dynamic> offer) async {
-    String? sdp = offer['sdp'];
-    String? type = offer['type'];
+  void _handleAnswer(Map<String, dynamic> answer) async {
+    String? sdp = answer['sdp'];
+    String? type = answer['type'];
 
     await peerConnection!.setRemoteDescription(RTCSessionDescription(sdp, type));
     peerConnections['sender'] = peerConnection!;
@@ -201,9 +206,15 @@ class _LivePageState extends State<LivePage> {
               scale: scale,
               alignment: Alignment.center,
               child: showingLocalStream
-                ? RTCVideoView(localVideoRenderer)
+                ? RTCVideoView(
+                    localVideoRenderer,
+                    mirror: isUsingFrontCamera,
+                  )
                 : (remoteStream != null
-                  ? RTCVideoView(remoteVideoRenderer)
+                  ? RTCVideoView(
+                    remoteVideoRenderer,
+                    mirror: isUsingFrontCamera,
+                  )
                   : Center(child: const CircularProgressIndicator()))
             ),
           if (!isCameraReady)

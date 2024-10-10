@@ -91,7 +91,10 @@ class _MainPageState extends State<MainPage> {
             Transform.scale(
               scale: scale,
               alignment: Alignment.center,
-              child: RTCVideoView(localVideoRenderer)
+              child: RTCVideoView(
+                localVideoRenderer,
+                mirror: isUsingFrontCamera,
+              )
             ),
           if (!isCameraReady)
             Center(child: const CircularProgressIndicator()),
@@ -165,8 +168,24 @@ class _MainPageState extends State<MainPage> {
                     isVideoRecording = !isVideoRecording;
                   });
                 },
-                onGoLivePressed: () {
-                  gt.Get.toNamed('/live', arguments: localStream);
+                onGoLivePressed: (blurMode) {
+                  final String selectedMode;
+                  if (blurMode == '얼굴') {
+                    selectedMode = 'face';
+                  } else if (blurMode == '상표/차번호') {
+                    selectedMode = 'text';
+                  } else {
+                    selectedMode = 'weapon';
+                  }
+                  print('selectedMode: $selectedMode');
+                  gt.Get.toNamed(
+                    '/live',
+                    arguments: {
+                      'localStream': localStream,
+                      'isUsingFrontCamera': isUsingFrontCamera,
+                      'blurMode': selectedMode,
+                    },
+                  );
                 },
               ),
             ),
