@@ -9,7 +9,7 @@ class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
   @override
-  _LandingPageState createState() => _LandingPageState();
+  State<LandingPage> createState() => _LandingPageState();
 }
 
 class _LandingPageState extends State<LandingPage> {
