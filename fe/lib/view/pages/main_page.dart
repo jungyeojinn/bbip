@@ -1,11 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:get/get.dart' as gt;
 import 'dart:async';
-
 import 'package:fe/view/components/main_page/camera_menu_widget.dart';
 import 'package:fe/view/components/main_page/bottom_ui_widget.dart';
+import 'package:fe/controller/face_controller.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -23,6 +24,8 @@ class _MainPageState extends State<MainPage> {
   bool isVideoRecording = false;
   bool isCameraReady = false;
   bool isUsingFrontCamera = true;
+
+  final FaceController _faceController = gt.Get.put(FaceController());
 
   @override
   void dispose() {
@@ -84,17 +87,19 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    Uint8List? savedImage = _faceController.getImage();
+
     return Scaffold(
       body: Stack(
         children: [
           if (isCameraReady)
             Transform.scale(
-              scale: scale,
-              alignment: Alignment.center,
-              child: RTCVideoView(
-                localVideoRenderer,
-                mirror: isUsingFrontCamera,
-              )
+                scale: scale,
+                alignment: Alignment.center,
+                child: RTCVideoView(
+                  localVideoRenderer,
+                  mirror: isUsingFrontCamera,
+                )
             ),
           if (!isCameraReady)
             Center(child: const CircularProgressIndicator()),
@@ -134,10 +139,15 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.asset(
-                      // 나중에 본인이 등록한 이미지를 보여줄 것이고
-                      // default 값은 아이콘으로 해둘 것임. 지금은 IU로 돼있음.
-                      'assets/iu.png',
+                    child: savedImage != null
+                        ? Image.memory(
+                      savedImage,
+                      width: 36.0,
+                      height: 36.0,
+                      fit: BoxFit.cover,
+                    )
+                        : Image.asset(
+                      'assets/iu.png', // 기본 이미지
                       width: 36.0,
                       height: 36.0,
                       fit: BoxFit.cover,

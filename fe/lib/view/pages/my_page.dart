@@ -1,7 +1,10 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:get/get.dart'; // GetX 사용을 위해 임포트
+import 'package:fe/controller/face_controller.dart'; // FaceController 임포트
 
 import 'package:fe/view/components/common/platform_list_widget.dart';
 
@@ -17,6 +20,7 @@ class _MyPageState extends State<MyPage> {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String userName = '';
   String userEmail = '';
+  final FaceController _faceController = Get.put(FaceController()); // FaceController 등록
 
   @override
   void initState() {
@@ -35,7 +39,7 @@ class _MyPageState extends State<MyPage> {
 
         // 사용자 정보 요청
         final response =
-            await _dio.get('http://j11a203.p.ssafy.io:8080/api/users');
+        await _dio.get('http://j11a203.p.ssafy.io:8080/api/users');
 
         if (response.statusCode == 200) {
           final responseData = response.data;
@@ -59,6 +63,8 @@ class _MyPageState extends State<MyPage> {
 
   @override
   Widget build(BuildContext context) {
+    Uint8List? savedImage = _faceController.getImage(); // 저장된 이미지 가져오기
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('MyPage'),
@@ -74,9 +80,11 @@ class _MyPageState extends State<MyPage> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 40, // 이미지 크기를 좀 더 키움
-                    backgroundImage: AssetImage('assets/jangwoo.png'),
+                    backgroundImage: savedImage != null
+                        ? MemoryImage(savedImage) // 저장된 이미지 사용
+                        : const AssetImage('assets/jangwoo.png') as ImageProvider, // 기본 이미지
                   ),
                   const SizedBox(width: 20),
                   Column(
@@ -170,7 +178,7 @@ class _MyPageState extends State<MyPage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              ...List.generate(3, (index) => _buildProfileRow('xxx@gmail.com')),
+              ...List.generate(1, (index) => _buildProfileRow(savedImage ?? Uint8List(0), userEmail)), // 저장된 이미지 전달
             ],
           ),
         ),
@@ -178,14 +186,16 @@ class _MyPageState extends State<MyPage> {
     );
   }
 
-  Widget _buildProfileRow(String email) {
+  Widget _buildProfileRow(Uint8List image, String email) {
     return Column(
       children: [
         Row(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 24,
-              backgroundImage: AssetImage('assets/jangwoo.png'),
+              backgroundImage: image.isNotEmpty
+                  ? MemoryImage(image) // 저장된 이미지 사용
+                  : const AssetImage('assets/jangwoo.png') as ImageProvider, // 기본 이미지
             ),
             const SizedBox(width: 16),
             Text(

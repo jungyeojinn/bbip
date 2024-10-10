@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'dart:typed_data'; // Uint8List 사용을 위해 import
+import 'dart:typed_data';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -61,14 +61,19 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     try {
       final XFile capturedImage = await _cameraController.takePicture();
       print('이미지 캡처 성공: ${capturedImage.path}');
+      print(capturedImage.runtimeType);
+      _faceController.saveFaceImage(capturedImage);
 
       final inputImage = InputImage.fromFilePath(capturedImage.path);
+      print(inputImage.runtimeType);
       final face = await _detectFace(inputImage);
+      print(face.runtimeType);
 
       if (face != null) {
         print('얼굴을 성공적으로 찾았습니다.');
         final croppedFaceBytes =
             await _cropFace(capturedImage.path, face.boundingBox);
+        print(croppedFaceBytes.runtimeType);
         if (croppedFaceBytes != null) {
           print('얼굴 이미지를 성공적으로 크롭했습니다.');
           _faceController.setCroppedFace(croppedFaceBytes);
@@ -217,7 +222,7 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    backgroundColor: Colors.black54,
+                    backgroundColor: Colors.transparent,
                   ),
                 ),
                 const SizedBox(height: 8),
