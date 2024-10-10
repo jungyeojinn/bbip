@@ -15,11 +15,12 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  String selectedMode = 'Live';
-  bool isVideoRecording = false;
-
   final localVideoRenderer = RTCVideoRenderer();
   MediaStream? localStream;
+  late double scale = 1 / (1.78 * MediaQuery.of(context).size.aspectRatio);
+
+  String selectedMode = 'Live';
+  bool isVideoRecording = false;
   bool isCameraReady = false;
   bool isUsingFrontCamera = true;
 
@@ -55,12 +56,16 @@ class _MainPageState extends State<MainPage> {
           'facingMode': isUsingFrontCamera ? 'user' : 'environment',
           'mandatory': { 'minFrameRate': '15', 'maxFrameRate': '15', },
         },
-        'audio': true,
+        'audio': false,
       });
 
+      localStream = videoStream;
+      final settings = localStream?.getVideoTracks()[0].getSettings();
+      final double aspectRatio = settings?['width'] / settings?['height'];
+
       setState(() {
-        localStream = videoStream;
         localVideoRenderer.srcObject = localStream;
+        scale = 1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
         isCameraReady = true;
       });
     } catch (e) {
@@ -79,17 +84,20 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1 / (1.7777777777777777777777777777778 * MediaQuery.of(context).size.aspectRatio);
     return Scaffold(
       body: Stack(
         children: [
-          Transform.scale(
-            scale: scale,
-            alignment: Alignment.center,
-            child: isCameraReady
-              ? RTCVideoView(localVideoRenderer)
-              : Center(child: const CircularProgressIndicator()),
-          ),
+          if (isCameraReady)
+            Transform.scale(
+              scale: scale,
+              alignment: Alignment.center,
+              child: RTCVideoView(
+                localVideoRenderer,
+                mirror: isUsingFrontCamera,
+              )
+            ),
+          if (!isCameraReady)
+            Center(child: const CircularProgressIndicator()),
           Positioned(
             top: 30.0,
             left: 20.0,
@@ -160,8 +168,24 @@ class _MainPageState extends State<MainPage> {
                     isVideoRecording = !isVideoRecording;
                   });
                 },
-                onGoLivePressed: () {
-                  gt.Get.toNamed('/live', arguments: localStream);
+                onGoLivePressed: (blurMode) {
+                  final String selectedMode;
+                  if (blurMode == '얼굴') {
+                    selectedMode = 'face';
+                  } else if (blurMode == '상표/차번호') {
+                    selectedMode = 'text';
+                  } else {
+                    selectedMode = 'weapon';
+                  }
+                  print('selectedMode: $selectedMode');
+                  gt.Get.toNamed(
+                    '/live',
+                    arguments: {
+                      'localStream': localStream,
+                      'isUsingFrontCamera': isUsingFrontCamera,
+                      'blurMode': selectedMode,
+                    },
+                  );
                 },
               ),
             ),

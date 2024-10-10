@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'animated_button.dart';
+import 'package:dotted_border/dotted_border.dart';
 import 'package:fe/view/components/main_page/gallery_icon_widget.dart';
+import 'category_selection_widget.dart';
 
-class BottomUiWidget extends StatelessWidget {
+class BottomUiWidget extends StatefulWidget {
   final String selectedMode;
   final bool isVideoRecording;
   final VoidCallback onRecordPressed;
-  final VoidCallback onGoLivePressed;
+  final Function(String) onGoLivePressed;
 
   const BottomUiWidget({
     super.key,
@@ -17,23 +20,143 @@ class BottomUiWidget extends StatelessWidget {
   });
 
   @override
+  State<BottomUiWidget> createState() => BottomUiWidgetState();
+}
+
+class BottomUiWidgetState extends State<BottomUiWidget> {
+  late String blurMode = '얼굴';
+
+  void _showPopup() {
+    Get.dialog(
+      Stack(
+        children: [
+          Positioned(
+            bottom: 200,
+            left: 20,
+            right: 20,
+            child: Material(
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(width: 10),
+                        SizedBox(
+                          height: 80,
+                          width: 80,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Image.asset(
+                              'assets/youtube-icon.png',
+                              width: 50,
+                              height: 50,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {},
+                          child: DottedBorder(
+                            color: Colors.blueAccent,
+                            strokeWidth: 2,
+                            dashPattern: const [8, 4],
+                            borderType: BorderType.RRect,
+                            radius: const Radius.circular(12),
+                            child: Container(
+                              height: 80,
+                              width: 80,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: const Center(
+                                child: Text(
+                                  '+',
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueAccent,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    CategorySelectionWidget(
+                      blurMode: blurMode,
+                      onBlurModeChanged: (label) {
+                        setState(() {
+                          blurMode = label;
+                          print('onBlurModeChanged: blurMode=$blurMode');
+                        });
+                      },
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Get.back();
+                            widget.onGoLivePressed(blurMode);
+                          },
+                          child: Text(
+                            '시작',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Get.back(); // 팝업 닫기
+                          },
+                          child: Text(
+                            'Close',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         Center(
           child: _buildModeSpecificUI(),
         ),
-        if (!isVideoRecording && selectedMode == 'Video' || selectedMode == 'Photo')
+        if (!widget.isVideoRecording && widget.selectedMode == 'Video' || widget.selectedMode == 'Photo')
           GalleryIconWidget()
       ],
     );
   }
 
   Widget _buildModeSpecificUI() {
-    switch (selectedMode) {
+    switch (widget.selectedMode) {
       case 'Live':
         return ElevatedButton(
-          onPressed: onGoLivePressed,
+          onPressed: () => _showPopup(),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
             textStyle: const TextStyle(fontSize: 20.0),
@@ -42,8 +165,8 @@ class BottomUiWidget extends StatelessWidget {
         );
       case 'Video':
         return AnimatedRecordButton(
-          isVideoRecording: isVideoRecording,
-          onPressed: onRecordPressed,
+          isVideoRecording: widget.isVideoRecording,
+          onPressed: widget.onRecordPressed,
         );
       case 'Photo':
         return IconButton(
