@@ -76,17 +76,15 @@ class _LandingPageState extends State<LandingPage> {
                   ),
                 )
               : const Center(child: CircularProgressIndicator()),
-          const Align(
+          Align(
             alignment: Alignment.topCenter,
             child: Padding(
-              padding: EdgeInsets.only(top: 150),
-              child: Text(
-                'BBIP',
-                style: TextStyle(
-                  fontSize: 48,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
+              padding: const EdgeInsets.only(top: 80),
+              child: Image.asset(
+                'assets/bbip.png',
+                width: 230, // 이미지의 너비 조절
+                height: 200, // 이미지의 높이 조절
+                fit: BoxFit.contain,
               ),
             ),
           ),
