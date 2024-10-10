@@ -11,7 +11,7 @@ class LivePage extends StatefulWidget {
   const LivePage({super.key});
 
   @override
-  _LivePageState createState() => _LivePageState();
+  State<LivePage> createState() => _LivePageState();
 }
 
 class _LivePageState extends State<LivePage> {
@@ -21,7 +21,7 @@ class _LivePageState extends State<LivePage> {
   bool isChatBoxVisible = false; // 채팅 박스의 가시성 상태
 
   late WebSocketChannel channel;
-  final String socketUrl = 'ws://70.12.247.94:8000/rtc/ws';
+  final String socketUrl = 'ws://172.30.1.38:8000/rtc/ws';
 
   RTCPeerConnection? peerConnection;
   final Map<String, RTCPeerConnection> peerConnections = {};
@@ -30,9 +30,10 @@ class _LivePageState extends State<LivePage> {
   final remoteVideoRenderer = RTCVideoRenderer();
   MediaStream? localStream;
   MediaStream? remoteStream;
+  late double scale;
 
   bool isCameraReady = false;
-  bool showingLocalStream = true;
+  bool showingLocalStream = false;
   bool isUsingFrontCamera = true;
 
   @override
@@ -50,8 +51,11 @@ class _LivePageState extends State<LivePage> {
   void initState() {
     super.initState();
     localStream = gt.Get.arguments as MediaStream?;
+    final settings = localStream?.getVideoTracks()[0].getSettings();
+    final double aspectRatio = settings?['width'] / settings?['height'];
     localVideoRenderer.initialize().then((_) {
       setState(() {
+        scale = 1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
         localVideoRenderer.srcObject = localStream;
         isCameraReady = true;
       });
@@ -81,11 +85,13 @@ class _LivePageState extends State<LivePage> {
       peerConnection = await createPeerConnection(config);
 
       peerConnection!.onIceCandidate = (RTCIceCandidate candidate) {
+        print('candidate: $candidate');
         final candidateData = {
           'type': 'candidate',
           'candidate': candidate.toMap(),
         };
         final jsonCandidate = jsonEncode(candidateData);
+        print('jsonCandidate: $jsonCandidate');
         channel.sink.add(jsonCandidate);
       };
 
@@ -125,7 +131,9 @@ class _LivePageState extends State<LivePage> {
       _handleSignal(signal);
     }, onDone: () {
       print('WebSocket connection closed.');
-    });
+    }, onError: (error) {
+      print('WebSocket error: $error');
+    }, cancelOnError: true);
   }
 
   void _handleSignal(Map<String, dynamic> signal) {
@@ -185,21 +193,21 @@ class _LivePageState extends State<LivePage> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1 / (1.7777777777777777777777777777778 * MediaQuery.of(context).size.aspectRatio);
     return Scaffold(
       body: Stack(
         children: [
-          Transform.scale(
-            scale: scale,
-            alignment: Alignment.center,
-            child: isCameraReady
-              ? (showingLocalStream
+          if (isCameraReady)
+            Transform.scale(
+              scale: scale,
+              alignment: Alignment.center,
+              child: showingLocalStream
                 ? RTCVideoView(localVideoRenderer)
                 : (remoteStream != null
                   ? RTCVideoView(remoteVideoRenderer)
                   : Center(child: const CircularProgressIndicator()))
-            ) : Center(child: const CircularProgressIndicator()),
-          ),
+            ),
+          if (!isCameraReady)
+            Center(child: const CircularProgressIndicator()),
           // Positioned(
           //   top: 30.0,
           //   left: 20.0,
