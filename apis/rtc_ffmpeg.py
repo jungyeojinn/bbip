@@ -10,7 +10,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from aiortc import MediaStreamTrack, RTCPeerConnection, RTCSessionDescription
 from av import VideoFrame
 from fastapi import APIRouter
-from utils import face_blur_yolo as yolo
+from utils import blur_yolo as yolo
 import collections
 from ultralytics import YOLO
 
