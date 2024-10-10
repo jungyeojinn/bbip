@@ -45,7 +45,16 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: 16),
+                    // 연결할 플랫폼을 선택하세요.
+                    Text(
+                      '연결할 플랫폼을 선택하세요.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
@@ -96,6 +105,16 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
                       ],
                     ),
                     SizedBox(height: 16),
+                    // 블러 처리할 부분을 선택하세요.
+                    Text(
+                      '블러 처리할 부분을 선택하세요.',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    SizedBox(height: 8),
                     CategorySelectionWidget(
                       blurMode: blurMode,
                       onBlurModeChanged: (label) {
@@ -114,7 +133,7 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
                             widget.onGoLivePressed(blurMode);
                           },
                           child: Text(
-                            '시작',
+                            'Go Live',
                             style: TextStyle(fontSize: 14),
                           ),
                         ),
@@ -123,7 +142,7 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
                             Get.back(); // 팝업 닫기
                           },
                           child: Text(
-                            'Close',
+                            'Cancel',
                             style: TextStyle(fontSize: 14),
                           ),
                         ),
@@ -146,7 +165,8 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
         Center(
           child: _buildModeSpecificUI(),
         ),
-        if (!widget.isVideoRecording && widget.selectedMode == 'Video' || widget.selectedMode == 'Photo')
+        if (!widget.isVideoRecording && widget.selectedMode == 'Video' ||
+            widget.selectedMode == 'Photo')
           GalleryIconWidget()
       ],
     );
@@ -158,7 +178,8 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
         return ElevatedButton(
           onPressed: () => _showPopup(),
           style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
             textStyle: const TextStyle(fontSize: 20.0),
           ),
           child: const Text('Go Live'),
@@ -170,7 +191,8 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
         );
       case 'Photo':
         return IconButton(
-          icon: Image.asset('assets/camera-button.png', width: 60.0, height: 60.0),
+          icon: Image.asset('assets/camera-button.png',
+              width: 60.0, height: 60.0),
           onPressed: () {},
         );
       default:
