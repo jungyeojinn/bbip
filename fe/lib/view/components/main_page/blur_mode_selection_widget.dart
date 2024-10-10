@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 
-class CategorySelectionWidget extends StatefulWidget {
+class BlurModeSelectionWidget extends StatefulWidget {
   final String blurMode;
   final Function(String) onBlurModeChanged;
 
-  const CategorySelectionWidget({
+  const BlurModeSelectionWidget({
     super.key,
     required this.blurMode,
     required this.onBlurModeChanged,
   });
 
   @override
-  State<CategorySelectionWidget> createState() => _CategorySelectionWidgetState();
+  State<BlurModeSelectionWidget> createState() => _BlurModeSelectionWidgetState();
 }
 
-class _CategorySelectionWidgetState extends State<CategorySelectionWidget> {
+class _BlurModeSelectionWidgetState extends State<BlurModeSelectionWidget> {
   String blurMode = '얼굴';
 
   @override

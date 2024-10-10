@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'animated_button.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:fe/view/components/main_page/gallery_icon_widget.dart';
-import 'category_selection_widget.dart';
+import 'blur_mode_selection_widget.dart';
 
 class BottomUiWidget extends StatefulWidget {
   final String selectedMode;
@@ -96,7 +96,7 @@ class BottomUiWidgetState extends State<BottomUiWidget> {
                       ],
                     ),
                     SizedBox(height: 16),
-                    CategorySelectionWidget(
+                    BlurModeSelectionWidget(
                       blurMode: blurMode,
                       onBlurModeChanged: (label) {
                         setState(() {

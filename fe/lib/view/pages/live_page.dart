@@ -47,7 +47,7 @@ class _LivePageState extends State<LivePage> {
     channel.sink.close();
     super.dispose();
   }
-
+  
   @override
   void initState() {
     super.initState();
@@ -55,7 +55,9 @@ class _LivePageState extends State<LivePage> {
     localStream = arguments['localStream'];
     isUsingFrontCamera = arguments['isUsingFrontCamera'];
     blurMode = arguments['blurMode'];
-    socketUrl = 'ws://70.12.247.94:8000/$blurMode/ws/';
+    print('blurMode $blurMode');
+    socketUrl = 'ws://172.20.10.4:8000/$blurMode/ws';
+    print('socketUrl: $socketUrl');
     final settings = localStream?.getVideoTracks()[0].getSettings();
     final double aspectRatio = settings?['width'] / settings?['height'];
     localVideoRenderer.initialize().then((_) {
