@@ -251,25 +251,6 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
               ),
             ),
           ),
-
-          // 건너뛰기 버튼 - 화면 하단 오른쪽에 위치
-          Positioned(
-            bottom: 50,
-            right: 20,
-            child: GestureDetector(
-              onTap: () {
-                Get.offNamed('/main');
-              },
-              child: const Text(
-                '건너뛰기 ->',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
