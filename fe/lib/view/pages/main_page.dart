@@ -180,12 +180,16 @@ class _MainPageState extends State<MainPage> {
                 },
                 onGoLivePressed: (blurMode) {
                   final String selectedMode;
+                  final List<String> blurModeIcons;
                   if (blurMode == '얼굴') {
                     selectedMode = 'face';
+                    blurModeIcons = ['assets/face-detection-onclick.png'];
                   } else if (blurMode == '상표/차번호') {
                     selectedMode = 'text';
+                    blurModeIcons = ['assets/license-plate-onclick.png', 'assets/brand-onclick.png'];
                   } else {
                     selectedMode = 'weapon';
+                    blurModeIcons = ['assets/knife-onclick.png'];
                   }
                   print('selectedMode: $selectedMode');
                   gt.Get.toNamed(
@@ -194,6 +198,7 @@ class _MainPageState extends State<MainPage> {
                       'localStream': localStream,
                       'isUsingFrontCamera': isUsingFrontCamera,
                       'blurMode': selectedMode,
+                      'blurModeIcons': blurModeIcons,
                     },
                   );
                 },

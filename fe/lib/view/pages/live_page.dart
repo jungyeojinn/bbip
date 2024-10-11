@@ -32,6 +32,7 @@ class _LivePageState extends State<LivePage> {
   MediaStream? remoteStream;
   late double scale;
   late String blurMode;
+  late List<String> blurModeIcons;
 
   bool isCameraReady = false;
   bool showingLocalStream = false;
@@ -56,7 +57,8 @@ class _LivePageState extends State<LivePage> {
     isUsingFrontCamera = arguments['isUsingFrontCamera'];
     blurMode = arguments['blurMode'];
     print('blurMode $blurMode');
-    socketUrl = 'ws://172.20.10.4:8000/$blurMode/ws';
+    blurModeIcons = arguments['blurModeIcons'];
+    socketUrl = 'ws://192.168.8.51:8000/$blurMode/ws';
     print('socketUrl: $socketUrl');
     final settings = localStream?.getVideoTracks()[0].getSettings();
     final double aspectRatio = settings?['width'] / settings?['height'];
@@ -106,6 +108,10 @@ class _LivePageState extends State<LivePage> {
         setState(() {
           remoteStream = event.streams[0];
           remoteVideoRenderer.srcObject = remoteStream;
+        });
+
+        event.streams[0].getAudioTracks().forEach((track) {
+          print("Playing remote audio");
         });
       };
 
@@ -221,18 +227,18 @@ class _LivePageState extends State<LivePage> {
             ),
           if (!isCameraReady)
             Center(child: const CircularProgressIndicator()),
-          // Positioned(
-          //   top: 30.0,
-          //   left: 20.0,
-          //   child: IconButton(
-          //     onPressed: () {},
-          //     icon: Image.asset(
-          //       'assets/rotate-button.png',
-          //       width: 32.0,
-          //       height: 32.0,
-          //     ),
-          //   ),
-          // ),
+          Positioned(
+            top: 30.0,
+            left: 20.0,
+            child: Row(
+              children: blurModeIcons
+                  .map((imagePath) => Image.asset(
+                imagePath,
+                width: 36,
+                height: 36,
+              )).toList(),
+            ),
+          ),
           Positioned(
             top: 30.0,
             right: 20.0,
