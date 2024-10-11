@@ -1,14 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:get/get.dart' as gt;
-import 'dart:convert';
 import 'dart:async';
-
 import 'package:fe/view/components/main_page/camera_menu_widget.dart';
 import 'package:fe/view/components/main_page/bottom_ui_widget.dart';
+import 'package:fe/controller/face_controller.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -18,13 +16,16 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  String selectedMode = 'Live';
-  bool isVideoRecording = false;
-
   final localVideoRenderer = RTCVideoRenderer();
   MediaStream? localStream;
+  late double scale = 1 / (1.78 * MediaQuery.of(context).size.aspectRatio);
+
+  String selectedMode = 'Live';
+  bool isVideoRecording = false;
   bool isCameraReady = false;
   bool isUsingFrontCamera = true;
+
+  final FaceController _faceController = gt.Get.put(FaceController());
 
   @override
   void dispose() {
@@ -58,12 +59,16 @@ class _MainPageState extends State<MainPage> {
           'facingMode': isUsingFrontCamera ? 'user' : 'environment',
           'mandatory': { 'minFrameRate': '15', 'maxFrameRate': '15', },
         },
-        'audio': true,
+        'audio': false,
       });
 
+      localStream = videoStream;
+      final settings = localStream?.getVideoTracks()[0].getSettings();
+      final double aspectRatio = settings?['width'] / settings?['height'];
+
       setState(() {
-        localStream = videoStream;
         localVideoRenderer.srcObject = localStream;
+        scale = 1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
         isCameraReady = true;
       });
     } catch (e) {
@@ -82,20 +87,25 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = 1 / (1.7777777777777777777777777777778 * MediaQuery.of(context).size.aspectRatio);
+    Uint8List? savedImage = _faceController.getImage();
+
     return Scaffold(
       body: Stack(
         children: [
-          Transform.scale(
-            scale: scale,
-            alignment: Alignment.center,
-            child: isCameraReady
-              ? RTCVideoView(localVideoRenderer)
-              : Center(child: const CircularProgressIndicator()),
-          ),
+          if (isCameraReady)
+            Transform.scale(
+                scale: scale,
+                alignment: Alignment.center,
+                child: RTCVideoView(
+                  localVideoRenderer,
+                  mirror: isUsingFrontCamera,
+                )
+            ),
+          if (!isCameraReady)
+            Center(child: const CircularProgressIndicator()),
           Positioned(
-            top: 16.0,
-            left: 16.0,
+            top: 30.0,
+            left: 20.0,
             child: IconButton(
               onPressed: () async {
                 setState(() {
@@ -112,8 +122,8 @@ class _MainPageState extends State<MainPage> {
           ),
           if (!isVideoRecording)
             Positioned(
-              top: 16.0,
-              right: 16.0,
+              top: 30.0,
+              right: 20.0,
               child: IconButton(
                 onPressed: () {
                   gt.Get.toNamed('/my');
@@ -129,10 +139,15 @@ class _MainPageState extends State<MainPage> {
                     ),
                   ),
                   child: ClipOval(
-                    child: Image.asset(
-                      // 나중에 본인이 등록한 이미지를 보여줄 것이고
-                      // default 값은 아이콘으로 해둘 것임. 지금은 IU로 돼있음.
-                      'assets/iu.png',
+                    child: savedImage != null
+                        ? Image.memory(
+                      savedImage,
+                      width: 36.0,
+                      height: 36.0,
+                      fit: BoxFit.cover,
+                    )
+                        : Image.asset(
+                      'assets/iu.png', // 기본 이미지
                       width: 36.0,
                       height: 36.0,
                       fit: BoxFit.cover,
@@ -163,8 +178,29 @@ class _MainPageState extends State<MainPage> {
                     isVideoRecording = !isVideoRecording;
                   });
                 },
-                onGoLivePressed: () {
-                  gt.Get.toNamed('/live', arguments: localStream);
+                onGoLivePressed: (blurMode) {
+                  final String selectedMode;
+                  final List<String> blurModeIcons;
+                  if (blurMode == '얼굴') {
+                    selectedMode = 'face';
+                    blurModeIcons = ['assets/face-detection-onclick.png'];
+                  } else if (blurMode == '상표/차번호') {
+                    selectedMode = 'text';
+                    blurModeIcons = ['assets/license-plate-onclick.png', 'assets/brand-onclick.png'];
+                  } else {
+                    selectedMode = 'weapon';
+                    blurModeIcons = ['assets/knife-onclick.png'];
+                  }
+                  print('selectedMode: $selectedMode');
+                  gt.Get.toNamed(
+                    '/live',
+                    arguments: {
+                      'localStream': localStream,
+                      'isUsingFrontCamera': isUsingFrontCamera,
+                      'blurMode': selectedMode,
+                      'blurModeIcons': blurModeIcons,
+                    },
+                  );
                 },
               ),
             ),

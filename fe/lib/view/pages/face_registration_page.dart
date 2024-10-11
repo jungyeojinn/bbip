@@ -1,12 +1,15 @@
 import 'dart:io';
 import 'dart:ui' as ui;
-import 'dart:typed_data'; // Uint8List 사용을 위해 import
+import 'dart:typed_data';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:camera/camera.dart';
 import 'package:dio/dio.dart' as dio;
+import 'package:http_parser/http_parser.dart';
 
 import 'package:fe/controller/face_controller.dart';
 import 'package:fe/view/pages/preview_page.dart';
@@ -23,6 +26,8 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
   late CameraController _cameraController;
   late Future<void> _initializeControllerFuture;
   final FaceController _faceController = Get.put(FaceController());
+  // SecureStorage 객체 생성
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -37,8 +42,8 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
 
   @override
   void dispose() {
-    _faceDetector.close();
     _cameraController.dispose();
+    _faceDetector.close();
     super.dispose();
   }
 
@@ -56,14 +61,19 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     try {
       final XFile capturedImage = await _cameraController.takePicture();
       print('이미지 캡처 성공: ${capturedImage.path}');
+      print(capturedImage.runtimeType);
+      _faceController.saveFaceImage(capturedImage);
 
       final inputImage = InputImage.fromFilePath(capturedImage.path);
+      print(inputImage.runtimeType);
       final face = await _detectFace(inputImage);
+      print(face.runtimeType);
 
       if (face != null) {
         print('얼굴을 성공적으로 찾았습니다.');
         final croppedFaceBytes =
             await _cropFace(capturedImage.path, face.boundingBox);
+        print(croppedFaceBytes.runtimeType);
         if (croppedFaceBytes != null) {
           print('얼굴 이미지를 성공적으로 크롭했습니다.');
           _faceController.setCroppedFace(croppedFaceBytes);
@@ -119,6 +129,11 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     return byteData!.buffer.asUint8List();
   }
 
+  // accessToken을 가져오는 메서드
+  Future<String?> _getAccessToken() async {
+    return await _secureStorage.read(key: 'accessToken');
+  }
+
   Future<void> _sendFaceToSpringBoot(Uint8List? croppedFaceBytes) async {
     if (croppedFaceBytes == null) {
       print('전송할 이미지가 없습니다.');
@@ -126,32 +141,41 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     }
 
     try {
-      // Dio 객체 생성
       dio.Dio dioClient = dio.Dio();
+      Map<String, bool> face = {'self': true};
+      String jsonString = jsonEncode(face);
 
-      // 이미지 파일을 dio의 MultipartFile로 변환
+      String? accessToken = await _getAccessToken();
       dio.MultipartFile imageFile = dio.MultipartFile.fromBytes(
         croppedFaceBytes,
         filename: 'cropped_face.png',
+        contentType: MediaType('image', 'png'),
       );
+      print(imageFile);
 
       // FormData 생성
       dio.FormData formData = dio.FormData.fromMap({
         'image': imageFile,
+        'face': dio.MultipartFile.fromString(
+          jsonString,
+          contentType: MediaType('application', 'json'), // JSON 타입으로 설정
+        ),
       });
 
-      // 서버로 POST 요청 보내기
+      // 요청 헤더에 accessToken 추가
       dio.Response response = await dioClient.post(
-        'http://your-spring-boot-server-url/upload', // 서버의 엔드포인트로 변경
+        'http://j11a203.p.ssafy.io:8080/api/faces', // 서버의 엔드포인트로 변경
         data: formData,
+        options: dio.Options(
+          headers: {
+            'Authorization': '$accessToken',
+          },
+        ),
       );
 
-      // 응답 처리
-      if (response.statusCode == 200) {
-        print('이미지 업로드 성공: ${response.data}');
-      } else {
-        print('이미지 업로드 실패: ${response.statusCode}');
-      }
+      await _cameraController.dispose();
+      Get.offNamed('/main');
+      print(response.statusCode);
     } catch (e) {
       print('에러 발생: $e');
     }
@@ -162,16 +186,60 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
     return Scaffold(
       body: Stack(
         children: [
+          // Transform.scale을 이용해 화면에 꽉 차는 카메라 프리뷰
           FutureBuilder<void>(
             future: _initializeControllerFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_cameraController);
+                final size = _cameraController.value.previewSize;
+                final aspectRatio = size!.width / size.height;
+                final scale =
+                    1 / (aspectRatio * MediaQuery.of(context).size.aspectRatio);
+                return Transform(
+                  alignment: Alignment.center,
+                  transform: Matrix4.identity()..scale(-1.0, 1.0), // 좌우 반전
+                  child: Transform.scale(
+                    scale: scale,
+                    child: Center(
+                      child: CameraPreview(_cameraController),
+                    ),
+                  ),
+                );
               } else {
                 return const Center(child: CircularProgressIndicator());
               }
             },
           ),
+
+          // 얼굴 맞추기 안내 틀
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  '얼굴을 맞춰주세요',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    backgroundColor: Colors.transparent,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: 250, // 원하는 틀의 너비
+                  height: 350, // 원하는 틀의 높이
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white, width: 2),
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.transparent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 촬영하기 버튼 - 화면 중앙에 위치
           Positioned(
             bottom: 100,
             left: 0,
@@ -180,23 +248,6 @@ class FaceRegistrationPageState extends State<FaceRegistrationPage> {
               child: ElevatedButton(
                 onPressed: _captureAndProcessImage,
                 child: const Text('촬영하기'),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 50,
-            right: 20,
-            child: GestureDetector(
-              onTap: () {
-                Get.toNamed('/main');
-              },
-              child: const Text(
-                '건너뛰기 ->',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                ),
               ),
             ),
           ),
