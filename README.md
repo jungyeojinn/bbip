@@ -4,7 +4,7 @@
 
 ## 🛠️ 역할 담당
 
-<table align="center">
+<table align="left">
     <tr align="center">
         <td>
             김호진
@@ -53,7 +53,6 @@
 
 # 📌프로젝트 소개
 
-# BBIP: 민감 정보 및 유해 콘텐츠 자동 블러 라이브 솔루션
 <img src="README/슬라이드1.PNG"  width="640px" height="360px" /><br/>
 
 ## 🌟 주요 기능
