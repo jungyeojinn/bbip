@@ -3,7 +3,7 @@
 > 민감 정보 및 유해 콘텐츠 자동 블러 라이브 솔루션
 
 ## 🛠️ 역할 담당
-
+<div>
 <table align="left">
     <tr align="center">
         <td>
@@ -46,6 +46,7 @@
         </td>
     </tr>
 </table>
+</div>
 <br>
 
 
