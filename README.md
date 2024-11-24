@@ -47,13 +47,16 @@
     </tr>
 </table>
 
+
 ## 개발 기간
 
 2024.08.19. ~ 2024.10.11.
 
+
 # 📌프로젝트 소개
 
 <img src="README/슬라이드1.PNG"  width="640px" height="360px" /><br/>
+
 
 ## 🌟 주요 기능
 
@@ -68,7 +71,6 @@
 
 ## 🗺 시연
 <img src="README/KakaoTalk_20241124_231838471.gif"  width="406px" height="702px" /><br/>
-<img src="README/KakaoTalk_20241124_231838471_01.gif"  width="406px" height="702px" /><br/>
 <img src="README/KakaoTalk_20241124_231838471_02.gif"  width="406px" height="702px" /><br/>
 <img src="README/KakaoTalk_20241124_231838471_03.gif"  width="406px" height="702px" /><br/>
 
